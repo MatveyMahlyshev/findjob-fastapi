@@ -1,13 +1,17 @@
-from sqlalchemy.orm import (
-    Mapped,
-    mapped_column,
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import (
+    Enum as SQLEnum,
+    String,
+    Boolean,
 )
-from sqlalchemy import Enum as SQLEnum, String, Boolean
 from enum import Enum
 from typing import TYPE_CHECKING
 
-
 from . import Base
+
+if TYPE_CHECKING:
+    from .candidate_profile import CandidateProfile
+
 
 
 class UserRole(str, Enum):
@@ -32,4 +36,9 @@ class User(Base):
     is_active = Mapped[bool] = mapped_column(
         Boolean,
         default=True,
+    )
+
+    candidate_profile = relationship(
+        "CandidateProfile",
+        back_populates="candidate_profile",
     )

@@ -5,9 +5,11 @@ from typing import TYPE_CHECKING
 
 from . import Base
 from .mixins import UserRelationMixin
+if TYPE_CHECKING:
+    from .profile_skill_association import ProfileSkillAssociation
 
 
-class CandidateProfile(UserRelationMixin, Base):
+class Profile(UserRelationMixin, Base):
     _user_back_populates = "profile"
 
     surname: Mapped[str] = mapped_column(String(50))
@@ -20,4 +22,6 @@ class CandidateProfile(UserRelationMixin, Base):
         unique=True,
     )
 
-    # skills = relationship("TechSkill", secondary=) описать связь многие ко многим через доп класс
+    skills_profiles: Mapped[list["ProfileSkillAssociation"]] = relationship(
+        back_populates="profile"
+    )

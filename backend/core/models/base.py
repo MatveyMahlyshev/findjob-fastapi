@@ -1,4 +1,9 @@
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, declared_attr
+from sqlalchemy.orm import (
+    DeclarativeBase,
+    Mapped,
+    mapped_column,
+    declared_attr,
+)
 
 
 class Base(DeclarativeBase):
@@ -12,4 +17,3 @@ class Base(DeclarativeBase):
     @declared_attr.directive
     def __tablename__(cls) -> str:
         return f"{cls.__name__.lower()}s"
-

@@ -25,4 +25,4 @@ class ProfileSkillAssociation(Base):
     skill_id: Mapped[int] = mapped_column(ForeignKey("skills.id"))
 
     profile: Mapped["Profile"] = relationship(back_populates="profile_skills")
-    techskills: Mapped["Skill"] = relationship(back_populates="skill_profiles")
+    skill: Mapped["Skill"] = relationship(back_populates="skill_profiles")

@@ -22,6 +22,6 @@ class Profile(UserRelationMixin, Base):
         unique=True,
     )
 
-    skills_profiles: Mapped[list["ProfileSkillAssociation"]] = relationship(
+    profile_skills: Mapped[list["ProfileSkillAssociation"]] = relationship(
         back_populates="profile"
     )

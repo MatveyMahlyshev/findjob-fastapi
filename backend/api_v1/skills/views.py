@@ -1,0 +1,42 @@
+from fastapi import (
+    APIRouter,
+    status,
+    Depends,
+)
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from .schemas import (
+    Skill,
+    SkillCreate,
+)
+from core.models import db_helper
+from . import crud
+
+router = APIRouter(
+    tags=["Skills"],
+)
+
+
+@router.get(
+    "/",
+    response_model=list[Skill],
+)
+async def get_skills(
+    session: AsyncSession = Depends(db_helper.scoped_session_dependency),
+):
+    return await crud.get_skills(session=session)
+
+
+@router.post(
+    "/",
+    response_model=Skill,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_skill(
+    skill_in: SkillCreate,
+    session: AsyncSession = Depends(db_helper.scoped_session_dependency),
+):
+    return await crud.create_skill(
+        session=session,
+        skill_in=skill_in,
+    )

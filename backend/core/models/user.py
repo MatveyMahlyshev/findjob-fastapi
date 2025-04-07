@@ -38,5 +38,6 @@ class User(Base):
     )
 
     profile: Mapped["Profile"] = relationship(
-        back_populates="profile",
+        "Profile",
+        back_populates="user",
     )

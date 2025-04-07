@@ -9,7 +9,7 @@ from .base import Base
 
 if TYPE_CHECKING:
     from .profile import Profile
-    from .skills import Skill
+    from .skill import Skill
 
 
 class ProfileSkillAssociation(Base):

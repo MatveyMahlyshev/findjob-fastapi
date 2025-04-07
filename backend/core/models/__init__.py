@@ -1,12 +1,14 @@
 __all__ = (
     "Base",
     "User",
-    "CandidateProfile",
-    "TechSkill"
+    "Profile",
+    "Skill",
+    "ProfileSkillAssociation",
 )
 
 
 from .base import Base
 from .user import User
-from .profile import CandidateProfile
-from .skills import TechSkill
+from .profile import Profile
+from .skill import Skill
+from .profile_skill_association import ProfileSkillAssociation

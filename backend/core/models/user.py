@@ -13,7 +13,6 @@ if TYPE_CHECKING:
     from .profile import Profile
 
 
-
 class UserRole(str, Enum):
     ADMIN = "admin"
     HR = "hr"
@@ -33,11 +32,10 @@ class User(Base):
         nullable=False,
         default=UserRole.CANDIDATE,
     )
-    is_active = Mapped[bool] = mapped_column(
+    is_active: Mapped[bool] = mapped_column(
         Boolean,
         default=True,
     )
-    
 
     profile: Mapped["Profile"] = relationship(
         back_populates="profile",

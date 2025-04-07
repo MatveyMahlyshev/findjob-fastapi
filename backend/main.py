@@ -1,7 +1,14 @@
 from fastapi import FastAPI
 import uvicorn
+from contextlib import asynccontextmanager
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 
 
 @app.get("/")

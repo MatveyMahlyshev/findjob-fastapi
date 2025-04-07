@@ -7,20 +7,21 @@ from asyncio import current_task
 
 from core.config import settings
 
-
 class DataBaseHelper:
     def __init__(self, url: str, echo: bool = False):
 
+        # создание асинхронного движка
         self.engine = create_async_engine(
-            url=url,
-            echo=echo,
+            url=settings.db.url,  # добавление адреса бд
+            echo=settings.db.echo,  # логи запросов
         )
 
+        # создание сессии
         self.session_factory = async_sessionmaker(
-            bind=self.engine,
-            autoflush=False,
-            autocommit=False,
-            expire_on_commit=False,
+            bind=self.engine,  # привязка сессии к раннее созданному движку
+            autoflush=False,  # автоматическая синхронизация изменения объектов перед запросом в бд
+            autocommit=False,  # автоматическая фиксация изменений в бд
+            expire_on_commit=False,  # удаление объекта после завершения сесии
         )
 
     def get_scoped_session(self):
@@ -36,7 +37,8 @@ class DataBaseHelper:
         await session.close()
 
 
+# создание экземпляра класса дбх
 db_helper = DataBaseHelper(
     url=settings.db.url,
-    echo=settings.db.url,
+    echo=settings.db.echo,
 )

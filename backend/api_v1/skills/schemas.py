@@ -13,9 +13,5 @@ class Skill(SkillBase):
     id: int
 
 
-class SkillCreate(SkillBase):
-    pass
-
-
 class SkillUpdate(SkillBase):
     new_title: str

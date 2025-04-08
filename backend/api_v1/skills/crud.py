@@ -5,8 +5,9 @@ from sqlalchemy import (
 )
 from fastapi import HTTPException, status
 
-from .schemas import SkillCreate
+from .schemas import SkillBase
 from core.models import Skill
+
 
 def to_capitalize(string: str) -> str:
     return string.lower().capitalize()
@@ -14,7 +15,7 @@ def to_capitalize(string: str) -> str:
 
 async def create_skill(
     session: AsyncSession,
-    skill_in: SkillCreate,
+    skill_in: SkillBase,
 ) -> Skill:
 
     skill = Skill(**skill_in.model_dump())
@@ -44,7 +45,9 @@ async def get_skill(session: AsyncSession, title: str) -> Skill:
     return skill
 
 
-async def update_skill(session: AsyncSession, title: str, new_title: str) -> Skill | None:
+async def update_skill(
+    session: AsyncSession, title: str, new_title: str
+) -> Skill | None:
     skill = await get_skill(
         session=session,
         title=title,
@@ -54,3 +57,14 @@ async def update_skill(session: AsyncSession, title: str, new_title: str) -> Ski
     await session.commit()
     return skill
 
+
+async def delete_skill(session: AsyncSession, title: str) -> None:
+    skill = await get_skill(
+        session=session,
+        title=title,
+    )
+
+    await session.delete(skill)
+    await session.commit()
+
+    return None

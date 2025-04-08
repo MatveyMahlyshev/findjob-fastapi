@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from .schemas import (
     Skill,
-    SkillCreate,
+    SkillBase,
     SkillUpdate,
 )
 from core.models import db_helper
@@ -34,7 +34,7 @@ async def get_skills(
     status_code=status.HTTP_201_CREATED,
 )
 async def create_skill(
-    skill_in: SkillCreate,
+    skill_in: SkillBase,
     session: AsyncSession = Depends(db_helper.scoped_session_dependency),
 ):
     return await crud.create_skill(
@@ -69,4 +69,15 @@ async def update_skill(
         session=session,
         title=skill_update.title,
         new_title=skill_update.new_title,
+    )
+
+
+@router.delete("/{title}/")
+async def delete_skill(
+    skill: SkillBase,
+    session: AsyncSession = Depends(db_helper.scoped_session_dependency),
+):
+    return await crud.delete_skill(
+        session=session,
+        title=skill.title,
     )

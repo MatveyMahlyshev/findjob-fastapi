@@ -32,10 +32,6 @@ class User(Base):
         nullable=False,
         default=UserRole.CANDIDATE,
     )
-    is_active: Mapped[bool] = mapped_column(
-        Boolean,
-        default=True,
-    )
 
     profile: Mapped["Profile"] = relationship(
         "Profile",

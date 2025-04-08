@@ -16,6 +16,7 @@ class Skill(Base):
         String(25),
         nullable=False,
         unique=True,
+        index=True
     )
     skill_profiles: Mapped[list["ProfileSkillAssociation"]] = relationship(
         back_populates="skill", 

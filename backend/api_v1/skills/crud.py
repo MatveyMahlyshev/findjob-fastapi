@@ -14,6 +14,7 @@ async def create_skill(
 ) -> Skill:
 
     skill = Skill(**skill_in.model_dump())
+    skill.title = skill.title.lower().capitalize()
     session.add(skill)
     await session.commit()
 
@@ -25,3 +26,11 @@ async def get_skills(session: AsyncSession) -> list[Skill]:
     result: Result = await session.execute(statement=stmt)
     skills = list(result.scalars().all())
     return skills
+
+
+async def get_skill(session: AsyncSession, title: str) -> Skill:
+    title = title.lower().capitalize()
+    stmt = select(Skill).where(Skill.title==title)
+    skill: Skill | None = await session.scalar(statement=stmt)
+    return skill
+    

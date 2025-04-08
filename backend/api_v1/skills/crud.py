@@ -8,6 +8,9 @@ from fastapi import HTTPException, status
 from .schemas import SkillCreate
 from core.models import Skill
 
+def to_capitalize(string: str) -> str:
+    return string.lower().capitalize()
+
 
 async def create_skill(
     session: AsyncSession,
@@ -15,7 +18,7 @@ async def create_skill(
 ) -> Skill:
 
     skill = Skill(**skill_in.model_dump())
-    skill.title = skill.title.lower().capitalize()
+    skill.title = to_capitalize(skill.title)
     session.add(skill)
     await session.commit()
 
@@ -30,7 +33,7 @@ async def get_skills(session: AsyncSession) -> list[Skill]:
 
 
 async def get_skill(session: AsyncSession, title: str) -> Skill:
-    title = title.lower().capitalize()
+    title = to_capitalize(title)
     stmt = select(Skill).where(Skill.title == title)
     skill: Skill | None = await session.scalar(statement=stmt)
     if skill is None:
@@ -40,4 +43,14 @@ async def get_skill(session: AsyncSession, title: str) -> Skill:
         )
     return skill
 
+
+async def update_skill(session: AsyncSession, title: str, new_title: str) -> Skill | None:
+    skill = await get_skill(
+        session=session,
+        title=title,
+    )
+    new_title = to_capitalize(new_title)
+    skill.title = new_title
+    await session.commit()
+    return skill
 

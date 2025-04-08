@@ -18,4 +18,4 @@ class SkillCreate(SkillBase):
 
 
 class SkillUpdate(SkillBase):
-    pass
+    new_title: str

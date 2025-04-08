@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from .schemas import (
     Skill,
     SkillCreate,
+    SkillUpdate,
 )
 from core.models import db_helper
 from . import crud
@@ -53,4 +54,19 @@ async def get_skill(
     return await crud.get_skill(
         session=session,
         title=title,
+    )
+
+
+@router.patch(
+    "/{title}/",
+    response_model=Skill,
+)
+async def update_skill(
+    skill_update: SkillUpdate,
+    session: AsyncSession = Depends(db_helper.scoped_session_dependency),
+):
+    return await crud.update_skill(
+        session=session,
+        title=skill_update.title,
+        new_title=skill_update.new_title,
     )

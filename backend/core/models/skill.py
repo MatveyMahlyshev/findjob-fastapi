@@ -9,6 +9,7 @@ from .base import Base
 
 if TYPE_CHECKING:
     from .profile_skill_association import ProfileSkillAssociation
+    from .vacancy_skill_association import VacancySkillAssociation
 
 
 class Skill(Base):
@@ -19,5 +20,9 @@ class Skill(Base):
         index=True
     )
     skill_profiles: Mapped[list["ProfileSkillAssociation"]] = relationship(
+        back_populates="skill", 
+    )
+
+    skill_vacancies: Mapped[list["VacancySkillAssociation"]] = relationship(
         back_populates="skill", 
     )

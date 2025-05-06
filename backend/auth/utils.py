@@ -32,3 +32,18 @@ def encode_jwt(
     )
 
     return encoded
+
+
+def decode_jwt(
+    token,
+    public_key: str = settings.auth.public_key,
+    algorithm: str = settings.auth.algorithm,
+):
+    decoded = jwt.decode(
+        token,
+        public_key,
+        algorithms=[algorithm],
+    )
+    return decoded
+
+

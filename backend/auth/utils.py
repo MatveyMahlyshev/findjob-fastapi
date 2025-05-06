@@ -47,3 +47,12 @@ def decode_jwt(
     return decoded
 
 
+def hash_password(password: str) -> bytes:
+    salt = bcrypt.gensalt()
+    pwd_bytes: bytes = password.encode()
+    return bcrypt.hashpw(
+        password=pwd_bytes,
+        salt=salt,
+    )
+
+

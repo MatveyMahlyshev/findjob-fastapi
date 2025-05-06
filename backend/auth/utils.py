@@ -56,3 +56,11 @@ def hash_password(password: str) -> bytes:
     )
 
 
+def validate_password(
+    password: str,
+    hased_password: bytes,
+) -> bool:
+    return bcrypt.checkpw(
+        password=password.encode(),
+        hashed_password=hased_password,
+    )

@@ -1,12 +1,32 @@
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import (
+    select,
+    Result,
+)
+from fastapi import (
+    HTTPException,
+    status,
+)
 
 from .schemas import CreateUserWithProfile
-from core.models import User, Profile
+from core.models import (
+    User,
+    Profile,
+)
 
 
 async def create_user_with_profile(
     session: AsyncSession, user_profile: CreateUserWithProfile
 ) -> dict:
+    stmt = select(User.email)
+    result: Result = await session.execute(statement=stmt)
+    user_emails = set(result.scalars().all())
+    if user_profile.user.email in user_emails:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Email already exists.",
+        )
+
     user = User(
         email=user_profile.user.email,
         password_hash=user_profile.user.password.get_secret_value(),

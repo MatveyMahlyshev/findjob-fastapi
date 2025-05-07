@@ -9,7 +9,7 @@ from typing import Annotated
 from annotated_types import MinLen, MaxLen
 
 from core.models.user import UserRole
-from api_v1.profiles.schemas import ProfileBase
+from api_v1.profiles.schemas import CandidateProfileBase
 
 
 class UserBase(BaseModel):
@@ -32,4 +32,4 @@ class UserUpdate(UserCreate):
 
 class CreateUserWithProfile(BaseModel):
     user: UserCreate
-    profile: ProfileBase
+    profile: CandidateProfileBase

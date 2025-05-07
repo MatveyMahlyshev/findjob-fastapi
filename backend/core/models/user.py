@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 from . import Base
 
 if TYPE_CHECKING:
-    from .profile import Profile
+    from .candidate_profile import CandidateProfile
 
 
 class UserRole(str, Enum):
@@ -33,7 +33,7 @@ class User(Base):
         default=UserRole.CANDIDATE,
     )
 
-    profile: Mapped["Profile"] = relationship(
-        "Profile",
+    candidate_profile: Mapped["CandidateProfile"] = relationship(
+        "CandidateProfile",
         back_populates="user",
     )

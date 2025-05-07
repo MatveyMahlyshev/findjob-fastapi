@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 from .base import Base
 
 if TYPE_CHECKING:
-    from .profile_skill_association import ProfileSkillAssociation
+    from .candidate_profile_skill_association import CandidateProfileSkillAssociation
     from .vacancy_skill_association import VacancySkillAssociation
 
 
@@ -19,7 +19,7 @@ class Skill(Base):
         unique=True,
         index=True
     )
-    skill_profiles: Mapped[list["ProfileSkillAssociation"]] = relationship(
+    skill_profiles: Mapped[list["CandidateProfileSkillAssociation"]] = relationship(
         back_populates="skill", 
     )
 

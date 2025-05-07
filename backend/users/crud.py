@@ -11,7 +11,7 @@ from auth.utils import hash_password
 from .schemas import CreateUserWithProfile
 from core.models import (
     User,
-    Profile,
+    CandidateProfile,
 )
 
 
@@ -35,10 +35,11 @@ async def create_user_with_profile(
     session.add(user)
     await session.flush()
 
-    profile = Profile(
+    profile = CandidateProfile(
         surname=user_profile.profile.surname,
         name=user_profile.profile.name,
         patronymic=user_profile.profile.patronymic,
+        age=user_profile.profile.age,
         about_candidate=user_profile.profile.about_candidate,
         user_id=user.id,
         education=user_profile.profile.education,

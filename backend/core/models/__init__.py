@@ -12,9 +12,9 @@ __all__ = (
 
 from .base import Base
 from .user import User
-from .profile import Profile
+from .candidate_profile import CandidateProfile
 from .skill import Skill
-from .profile_skill_association import ProfileSkillAssociation
+from .candidate_profile_skill_association import CandidateProfileSkillAssociation
 from .db_helper import db_helper
 from .vacancy import Vacancy
 from .vacancy_skill_association import VacancySkillAssociation

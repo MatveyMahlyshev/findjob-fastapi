@@ -8,21 +8,21 @@ from typing import TYPE_CHECKING
 from .base import Base
 
 if TYPE_CHECKING:
-    from .profile import Profile
+    from .candidate_profile import CandidateProfile
     from .skill import Skill
 
 
-class ProfileSkillAssociation(Base):
-    __tablename__ = "profile_skill_association"
+class CandidateProfileSkillAssociation(Base):
+    __tablename__ = "candidate_profile_skill_association"
     __table_args__ = (
         UniqueConstraint(
-            "profile_id",
+            "candidate_profile_id",
             "skill_id",
             name="idx_unique_order_product",
         ),
     )
-    profile_id: Mapped[int] = mapped_column(ForeignKey("profiles.id"))
+    candidate_profile_id: Mapped[int] = mapped_column(ForeignKey("candidateprofiles.id"))
     skill_id: Mapped[int] = mapped_column(ForeignKey("skills.id"))
 
-    profile: Mapped["Profile"] = relationship(back_populates="profile_skills")
+    candidate_profile: Mapped["CandidateProfile"] = relationship(back_populates="profile_skills")
     skill: Mapped["Skill"] = relationship(back_populates="skill_profiles")

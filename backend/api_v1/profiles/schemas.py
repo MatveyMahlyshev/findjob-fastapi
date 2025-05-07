@@ -9,24 +9,25 @@ from annotated_types import (
 )
 
 
-class ProfileBase(BaseModel):
+class CandidateProfileBase(BaseModel):
     name: Annotated[str, MinLen(2), MaxLen(50)]
     surname: Annotated[str, MinLen(2), MaxLen(50)]
     patronymic: Annotated[str, MinLen(2), MaxLen(50)]
+    age: int
     about_candidate: str
     education: str
 
 
-class Profile(ProfileBase):
+class CandidateProfile(CandidateProfileBase):
     model_config = ConfigDict(from_attributes=True)
     id: int
 
 
-class ProfileCreate(ProfileBase):
+class CandidateProfileCreate(CandidateProfileBase):
     pass
 
 
-class ProfileUpdate(ProfileBase):
+class CandidateProfileUpdate(CandidateProfileBase):
     name: Annotated[str, MinLen(2), MaxLen(50)] | None
     surname: Annotated[str, MinLen(2), MaxLen(50)] | None
     patronymic: Annotated[str, MinLen(2), MaxLen(50)] | None

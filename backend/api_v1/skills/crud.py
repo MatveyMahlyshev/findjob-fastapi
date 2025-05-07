@@ -33,7 +33,10 @@ async def get_skills(session: AsyncSession) -> list[Skill]:
     return skills
 
 
-async def get_skill(session: AsyncSession, title: str) -> Skill:
+async def get_skill(
+    session: AsyncSession,
+    title: str,
+) -> Skill:
     title = to_capitalize(title)
     stmt = select(Skill).where(Skill.title == title)
     skill: Skill | None = await session.scalar(statement=stmt)
@@ -46,7 +49,9 @@ async def get_skill(session: AsyncSession, title: str) -> Skill:
 
 
 async def update_skill(
-    session: AsyncSession, title: str, new_title: str
+    session: AsyncSession,
+    title: str,
+    new_title: str,
 ) -> Skill | None:
     skill = await get_skill(
         session=session,
@@ -58,7 +63,10 @@ async def update_skill(
     return skill
 
 
-async def delete_skill(session: AsyncSession, title: str) -> None:
+async def delete_skill(
+    session: AsyncSession,
+    title: str,
+) -> None:
     skill = await get_skill(
         session=session,
         title=title,

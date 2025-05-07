@@ -7,7 +7,7 @@ from fastapi import (
     HTTPException,
     status,
 )
-
+from auth.utils import hash_password
 from .schemas import CreateUserWithProfile
 from core.models import (
     User,
@@ -26,10 +26,10 @@ async def create_user_with_profile(
             status_code=status.HTTP_409_CONFLICT,
             detail="Email already exists.",
         )
-
+    hashpwd = hash_password(user_profile.user.password)
     user = User(
         email=user_profile.user.email,
-        password_hash=user_profile.user.password.get_secret_value(),
+        password_hash=hashpwd,
         role=user_profile.user.role,
     )
     session.add(user)
@@ -50,6 +50,3 @@ async def create_user_with_profile(
         "user": user,
         "profile": profile,
     }
-
-
-# async def delete_user_with_profile

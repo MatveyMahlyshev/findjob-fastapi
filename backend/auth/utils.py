@@ -10,7 +10,7 @@ from core.config import settings
 
 def encode_jwt(
     payload: dict,
-    private_key: str = settings.auth.private_key,
+    private_key: str = settings.auth.private_key.read_text(),
     algorithm: str = settings.auth.algorithm,
     expire_timedelta: timedelta | None = None,
     expire_minutes: int = settings.auth.access_token_expire_minutes,
@@ -58,9 +58,9 @@ def hash_password(password: str) -> bytes:
 
 def validate_password(
     password: str,
-    hased_password: bytes,
+    hashed_password: bytes,
 ) -> bool:
     return bcrypt.checkpw(
         password=password.encode(),
-        hashed_password=hased_password,
+        hashed_password=hashed_password,
     )

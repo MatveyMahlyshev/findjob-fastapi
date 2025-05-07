@@ -14,7 +14,7 @@ class AuthJWT(BaseModel):
     public_key: Path = BASE_DIR / "certs" / "jwt-public.pem"
     algorithm: str = "RS256"
     access_token_expire_minutes: int = 15
-    refresh_token_expire_days: int = 50
+    refresh_token_expire_days: int = 30
 
 
 class DBSettings(BaseModel):
@@ -23,6 +23,7 @@ class DBSettings(BaseModel):
 
 
 class Settings(BaseSettings):
+    auth: AuthJWT = AuthJWT()
     db: DBSettings = DBSettings()
     api_v1_prefix: str = "/api/v1"
 

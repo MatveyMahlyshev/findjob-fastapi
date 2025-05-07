@@ -23,7 +23,7 @@ class User(UserBase):
 
 
 class UserCreate(UserBase):
-    password: SecretStr = Field(min_length=8, max_length=20)
+    password: str = Field(min_length=10, max_length=25)
 
 
 class UserUpdate(UserCreate):
@@ -33,4 +33,3 @@ class UserUpdate(UserCreate):
 class CreateUserWithProfile(BaseModel):
     user: UserCreate
     profile: ProfileBase
-    

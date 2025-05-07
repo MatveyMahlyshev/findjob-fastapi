@@ -14,6 +14,7 @@ class ProfileBase(BaseModel):
     surname: Annotated[str, MinLen(2), MaxLen(50)]
     patronymic: Annotated[str, MinLen(2), MaxLen(50)]
     about_candidate: str
+    education: str
 
 
 class Profile(ProfileBase):

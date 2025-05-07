@@ -41,6 +41,7 @@ async def create_user_with_profile(
         patronymic=user_profile.profile.patronymic,
         about_candidate=user_profile.profile.about_candidate,
         user_id=user.id,
+        education=user_profile.profile.education,
     )
     session.add(profile)
 

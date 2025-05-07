@@ -16,6 +16,7 @@ class Profile(UserRelationMixin, Base):
     name: Mapped[str] = mapped_column(String(50))
     patronymic: Mapped[str | None] = mapped_column(String(50))
     about_candidate: Mapped[str | None] = mapped_column(Text)
+    education: Mapped[str] = mapped_column(Text)
     user_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("users.id"),

@@ -4,6 +4,8 @@ from fastapi import (
     status,
     Depends,
 )
+from jwt.exceptions import InvalidTokenError
+from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import (
     select,
@@ -11,18 +13,17 @@ from sqlalchemy import (
 )
 from datetime import timedelta
 
-from core.models import (
-    User,
-    db_helper,
-)
+from core.models import User, db_helper, CandidateProfile
 from core.config import settings
 from .utils import validate_password
 from .schemas import UserAuthSchema
-from .utils import encode_jwt
+from .utils import encode_jwt, decode_jwt
 
 TOKEN_TYPE_FIELD = "type"
 ACCESS_TOKEN_TYPE = "access"
 REFRESH_TOKEN_TYPE = "refresh"
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login/")
 
 
 async def validate_auth_user(
@@ -67,7 +68,7 @@ def create_token(
 
 def create_access_token(user: UserAuthSchema) -> str:
     jwt_payload = {
-        "sub": "user",
+        "sub": user.email,
         "email": user.email,
     }
     return create_token(
@@ -78,9 +79,69 @@ def create_access_token(user: UserAuthSchema) -> str:
 
 def create_refresh_token(user: UserAuthSchema) -> str:
     jwt_payload = {
-        "sub": "user",
+        "sub": user.email,
     }
     return create_token(
         token_type=REFRESH_TOKEN_TYPE,
         token_data=jwt_payload,
     )
+
+
+def get_current_token_payload(
+    token: str = Depends(oauth2_scheme),
+) -> UserAuthSchema:
+    try:
+        payload = decode_jwt(
+            token=token,
+        )
+    except InvalidTokenError as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Token error. {e}",
+        )
+    return payload
+
+
+def validate_token_type(
+    payload: dict,
+    token_type: str,
+) -> bool:
+    if payload.get(TOKEN_TYPE_FIELD) == token_type:
+        return True
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Error type of token.",
+    )
+
+
+async def get_user_by_token_sub(
+    payload: dict,
+    session: AsyncSession = Depends(db_helper.scoped_session_dependency),
+) -> dict:
+    email: str | None = payload.get("sub")
+    if email:
+        stmt = select(User).where(User.email == email)
+        result: Result = await session.execute(statement=stmt)
+        user: User = result.scalar()
+        if user:
+            stmt = select(CandidateProfile).where(CandidateProfile.user_id == user.id)
+            result = await session.execute(statement=stmt)
+            profile: CandidateProfile = result.scalar()
+            return {
+                "user": user,
+                "profile": profile,
+            }
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Invalid email or password.",
+    )
+
+
+async def get_current_auth_user_for_refresh(
+    payload: dict = Depends(get_current_token_payload),
+) -> dict:
+    validate_token_type(
+        payload=payload,
+        token_type=REFRESH_TOKEN_TYPE,
+    )
+    return await get_user_by_token_sub(payload=payload)

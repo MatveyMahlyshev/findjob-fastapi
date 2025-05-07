@@ -10,6 +10,7 @@ from .auth_helpers import (
     validate_auth_user,
     create_access_token,
     create_refresh_token,
+    get_current_auth_user_for_refresh
 )
 from .schemas import (
     TokenInfo,
@@ -41,3 +42,8 @@ async def auth_user(
         expires_in=int(access_token_expires.total_seconds()),
         refresh_expires_in=int(refresh_token_expires.total_seconds()),
     )
+
+@router.post("/refresh/",response_model=TokenInfo, response_model_exclude_none=True,)
+async def auth_refresh(user: UserAuthSchema = Depends(get_current_auth_user_for_refresh)):
+    access_token = create_access_token(user=user)
+    return TokenInfo(access_token=access_token)

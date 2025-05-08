@@ -25,7 +25,10 @@ async def get_candidate_profile(
 
 @router.put("/candidate/me/edit/")
 async def update_candidate_profile(
+    data_to_update: CandidateProfileUpdate,
     payload: dict = Depends(get_current_token_payload),
     session: AsyncSession = Depends(db_helper.scoped_session_dependency),
 ) -> CandidateProfileUpdate:
-    return await crud.update_candidate_profile()
+    return await crud.update_candidate_profile(
+        profile_data=data_to_update, session=session, payload=payload
+    )

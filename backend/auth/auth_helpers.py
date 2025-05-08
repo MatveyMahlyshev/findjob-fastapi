@@ -89,15 +89,13 @@ def create_refresh_token(user: UserAuthSchema) -> str:
 
 def get_current_token_payload(
     token: str = Depends(oauth2_scheme),
-) -> UserAuthSchema:
+) -> dict:
     try:
-        payload = decode_jwt(
-            token=token,
-        )
+        payload = decode_jwt(token=token)
     except InvalidTokenError as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Token error. {e}",
+            detail=f"Invalid token: {e}",
         )
     return payload
 
@@ -116,32 +114,38 @@ def validate_token_type(
 
 async def get_user_by_token_sub(
     payload: dict,
-    session: AsyncSession = Depends(db_helper.scoped_session_dependency),
+    session: AsyncSession,
 ) -> dict:
     email: str | None = payload.get("sub")
-    if email:
-        stmt = select(User).where(User.email == email)
-        result: Result = await session.execute(statement=stmt)
-        user: User = result.scalar()
-        if user:
-            stmt = select(CandidateProfile).where(CandidateProfile.user_id == user.id)
-            result = await session.execute(statement=stmt)
-            profile: CandidateProfile = result.scalar()
-            return {
-                "user": user,
-                "profile": profile,
-            }
-    raise HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Invalid email or password.",
-    )
+    if not email:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token does not contain email",
+        )
+
+    stmt = select(User).where(User.email == email)
+    result: Result = await session.execute(statement=stmt)
+    user: User = result.scalar()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found",
+        )
+
+    # stmt = select(CandidateProfile).where(CandidateProfile.user_id == user.id)
+    # result = await session.execute(statement=stmt)
+    # profile: CandidateProfile = result.scalar()
+
+    return {
+        "user": user,
+        # "profile": profile,
+    }
 
 
 async def get_current_auth_user_for_refresh(
     payload: dict = Depends(get_current_token_payload),
+    session: AsyncSession = Depends(db_helper.scoped_session_dependency),  # Добавляем session как зависимость
 ) -> dict:
-    validate_token_type(
-        payload=payload,
-        token_type=REFRESH_TOKEN_TYPE,
-    )
-    return await get_user_by_token_sub(payload=payload)
+    validate_token_type(payload=payload, token_type=REFRESH_TOKEN_TYPE)
+    return await get_user_by_token_sub(payload=payload, session=session)  # Явно передаем session

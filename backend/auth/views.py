@@ -33,17 +33,13 @@ async def auth_user(
     access_token = create_access_token(user=user)
     refresh_token = create_refresh_token(user=user)
 
-    access_token_expires = timedelta(minutes=settings.auth.access_token_expire_minutes)
-    refresh_token_expires = timedelta(days=settings.auth.refresh_token_expire_days)
 
     return TokenInfo(
         access_token=access_token,
         refresh_token=refresh_token,
-        expires_in=int(access_token_expires.total_seconds()),
-        refresh_expires_in=int(refresh_token_expires.total_seconds()),
     )
 
-@router.post("/refresh/",response_model=TokenInfo, response_model_exclude_none=True,)
-async def auth_refresh(user: UserAuthSchema = Depends(get_current_auth_user_for_refresh)):
-    access_token = create_access_token(user=user)
+@router.post("/refresh/", response_model=TokenInfo, response_model_exclude_none=True)
+async def auth_refresh(user_data: dict = Depends(get_current_auth_user_for_refresh)):
+    access_token = create_access_token(user=user_data["user"])
     return TokenInfo(access_token=access_token)

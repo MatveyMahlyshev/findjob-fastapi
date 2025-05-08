@@ -36,10 +36,7 @@ async def validate_auth_user(
     if not user:
         raise unauthed_exception
 
-    if not validate_password(
-        password=password,
-        hashed_password=user.password_hash,
-    ):
+    if not validate_password(password=password, hashed_password=user.password_hash):
         raise unauthed_exception
 
     return user
@@ -65,20 +62,12 @@ def create_access_token(user: UserAuthSchema) -> str:
         "sub": user.email,
         "email": user.email,
     }
-    return create_token(
-        token_type=ACCESS_TOKEN_TYPE,
-        token_data=jwt_payload,
-    )
+    return create_token(token_type=ACCESS_TOKEN_TYPE, token_data=jwt_payload)
 
 
 def create_refresh_token(user: UserAuthSchema) -> str:
-    jwt_payload = {
-        "sub": user.email,
-    }
-    return create_token(
-        token_type=REFRESH_TOKEN_TYPE,
-        token_data=jwt_payload,
-    )
+    jwt_payload = {"sub": user.email}
+    return create_token(token_type=REFRESH_TOKEN_TYPE, token_data=jwt_payload)
 
 
 def get_current_token_payload(
@@ -94,10 +83,7 @@ def get_current_token_payload(
     return payload
 
 
-def validate_token_type(
-    payload: dict,
-    token_type: str,
-) -> bool:
+def validate_token_type(payload: dict, token_type: str) -> bool:
     if payload.get(TOKEN_TYPE_FIELD) == token_type:
         return True
     raise HTTPException(
@@ -106,10 +92,7 @@ def validate_token_type(
     )
 
 
-async def get_user_by_token_sub(
-    payload: dict,
-    session: AsyncSession,
-) -> UserAuthSchema:
+async def get_user_by_token_sub(payload: dict, session: AsyncSession) -> UserAuthSchema:
     email: str | None = payload.get("sub")
     if not email:
         raise HTTPException(
@@ -123,8 +106,7 @@ async def get_user_by_token_sub(
 
     if not user:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found"
         )
     return user
 

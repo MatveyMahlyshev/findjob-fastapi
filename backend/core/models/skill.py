@@ -14,15 +14,12 @@ if TYPE_CHECKING:
 
 class Skill(Base):
     title: Mapped[str] = mapped_column(
-        String(25),
-        nullable=False,
-        unique=True,
-        index=True
+        String(25), nullable=False, unique=True, index=True
     )
     skill_profiles: Mapped[list["CandidateProfileSkillAssociation"]] = relationship(
-        back_populates="skill", 
+        back_populates="skill",
     )
 
     skill_vacancies: Mapped[list["VacancySkillAssociation"]] = relationship(
-        back_populates="skill", 
+        back_populates="skill",
     )

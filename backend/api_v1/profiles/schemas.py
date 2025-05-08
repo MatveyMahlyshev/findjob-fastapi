@@ -11,9 +11,6 @@ from annotated_types import (
 
 from api_v1.skills.schemas import SkillBase
 
-class CandidateProfileSkillAssociation(BaseModel):
-    skill_id: int
-
 
 class CandidateProfileBase(BaseModel):
     name: Annotated[str, MinLen(2), MaxLen(50)]
@@ -22,25 +19,12 @@ class CandidateProfileBase(BaseModel):
     age: int
     about_candidate: str
     education: str
-    skills: List[CandidateProfileSkillAssociation]
+    skills: List[SkillBase]
 
 
 class CandidateProfile(CandidateProfileBase):
     model_config = ConfigDict(from_attributes=True)
     id: int
-
-
-class CandidateProfileCreate(CandidateProfileBase):
-    pass
-
-
-class CandidateProfileUpdate(CandidateProfileBase):
-    name: Annotated[str, MinLen(2), MaxLen(50)]
-    surname: Annotated[str, MinLen(2), MaxLen(50)]
-    patronymic: Annotated[str, MinLen(2), MaxLen(50)]
-    age: int
-    about_candidate: str | None
-    education: str
 
 class CandidateProfileUser(BaseModel):
     email: Annotated[EmailStr, MinLen(5), MaxLen(25)]
@@ -51,3 +35,8 @@ class CandidateProfileUser(BaseModel):
     about_candidate: str
     education: str
     skills: List[SkillBase]
+
+
+class CandidateProfileUpdate(CandidateProfileUser):
+    pass
+

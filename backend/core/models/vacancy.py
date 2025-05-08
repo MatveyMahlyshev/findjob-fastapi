@@ -9,18 +9,10 @@ if TYPE_CHECKING:
 
 
 class Vacancy(Base):
-    title: Mapped[str] = mapped_column(
-        nullable=False,
-        index=True,
-    )
-    company: Mapped[str] = mapped_column(
-        nullable=False,
-    )
-    description: Mapped[str] = mapped_column(
-        Text(),
-        nullable=False,
-    )
+    title: Mapped[str] = mapped_column(nullable=False, index=True)
+    company: Mapped[str] = mapped_column(nullable=False)
+    description: Mapped[str] = mapped_column(Text(), nullable=False)
 
     vacancy_skills: Mapped[list["VacancySkillAssociation"]] = relationship(
-        back_populates="vacancy",
+        back_populates="vacancy"
     )

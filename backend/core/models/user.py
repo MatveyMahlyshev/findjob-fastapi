@@ -1,9 +1,5 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import (
-    Enum as SQLEnum,
-    String,
-    Boolean,
-)
+from sqlalchemy import Enum as SQLEnum, String
 from enum import Enum
 from typing import TYPE_CHECKING
 

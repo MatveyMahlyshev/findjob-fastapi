@@ -1,20 +1,18 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends, HTTPException, status
-from sqlalchemy import select, Result
+from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from auth.auth_helpers import get_current_token_payload
 from core.models import User, CandidateProfile, CandidateProfileSkillAssociation
-from .schemas import CandidateProfileUser, SkillBase
+from .schemas import CandidateProfileUser
 
 
 from sqlalchemy.orm import selectinload
 
 
 async def get_user_with_profile_by_token(
-    session: AsyncSession,
-    payload: dict,
-) -> dict:
+    session: AsyncSession, payload: dict
+) -> CandidateProfileUser:
     email = payload.get("sub")
     if not email:
         raise HTTPException(
@@ -45,7 +43,7 @@ async def get_user_with_profile_by_token(
             detail="Profile not found for this user",
         )
 
-    profile_data = {
+    return {
         "email": user.email,
         "role": user.role.value,
         "name": user.candidate_profile.name,
@@ -60,4 +58,6 @@ async def get_user_with_profile_by_token(
         ],
     }
 
-    return profile_data
+
+async def update_candidate_profile():
+    pass

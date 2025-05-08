@@ -1,26 +1,16 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import (
-    select,
-    Result,
-)
-from fastapi import (
-    HTTPException,
-    status,
-)
+from sqlalchemy import select
+from fastapi import HTTPException, status
+
+
 from auth.utils import hash_password
 from .schemas import CreateUserWithProfile
-from core.models import (
-    User,
-    CandidateProfile,
-    Skill,
-    CandidateProfileSkillAssociation,
-)
+from core.models import User, CandidateProfile, Skill, CandidateProfileSkillAssociation
 
 
 async def create_user_with_profile(
     session: AsyncSession, user_profile: CreateUserWithProfile
 ) -> dict:
-    # Проверка существования email
     email_exists = await session.execute(
         select(User.email).where(User.email == user_profile.user.email)
     )
@@ -30,7 +20,6 @@ async def create_user_with_profile(
             detail="Email already exists.",
         )
 
-    # Создание пользователя
     user = User(
         email=user_profile.user.email,
         password_hash=hash_password(user_profile.user.password),
@@ -39,13 +28,11 @@ async def create_user_with_profile(
     session.add(user)
     await session.flush()
 
-    # Валидация навыков
     if not user_profile.profile.skills:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="No skills chosen."
+            status_code=status.HTTP_400_BAD_REQUEST, detail="No skills choosen."
         )
 
-    # Создание профиля
     profile = CandidateProfile(
         surname=user_profile.profile.surname,
         name=user_profile.profile.name,
@@ -58,7 +45,6 @@ async def create_user_with_profile(
     session.add(profile)
     await session.flush()
 
-    # Добавление навыков
     for skill in user_profile.profile.skills:
         skill_obj = await session.get(Skill, skill.skill_id)
         if not skill_obj:
@@ -68,8 +54,7 @@ async def create_user_with_profile(
             )
 
         association = CandidateProfileSkillAssociation(
-            candidate_profile_id=profile.id,
-            skill_id=skill.skill_id,
+            candidate_profile_id=profile.id, skill_id=skill.skill_id
         )
         session.add(association)
 

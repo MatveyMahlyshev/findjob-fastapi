@@ -115,7 +115,7 @@ def validate_token_type(
 async def get_user_by_token_sub(
     payload: dict,
     session: AsyncSession,
-) -> dict:
+) -> UserAuthSchema:
     email: str | None = payload.get("sub")
     if not email:
         raise HTTPException(
@@ -137,15 +137,11 @@ async def get_user_by_token_sub(
     # result = await session.execute(statement=stmt)
     # profile: CandidateProfile = result.scalar()
 
-    return {
-        "user": user,
-        # "profile": profile,
-    }
-
+    return user
 
 async def get_current_auth_user_for_refresh(
     payload: dict = Depends(get_current_token_payload),
     session: AsyncSession = Depends(db_helper.scoped_session_dependency),  # Добавляем session как зависимость
-) -> dict:
+) -> UserAuthSchema:
     validate_token_type(payload=payload, token_type=REFRESH_TOKEN_TYPE)
     return await get_user_by_token_sub(payload=payload, session=session)  # Явно передаем session

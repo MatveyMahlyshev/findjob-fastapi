@@ -42,6 +42,6 @@ async def auth_user(
 
 
 @router.post("/refresh/", response_model=TokenInfo, response_model_exclude_none=True)
-async def auth_refresh(user_data: dict = Depends(get_current_auth_user_for_refresh)):
-    access_token = create_access_token(user=user_data["user"])
+async def auth_refresh(user: UserAuthSchema = Depends(get_current_auth_user_for_refresh)):
+    access_token = create_access_token(user=user)
     return TokenInfo(access_token=access_token)

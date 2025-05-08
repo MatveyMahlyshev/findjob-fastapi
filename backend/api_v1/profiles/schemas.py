@@ -50,4 +50,4 @@ class CandidateProfileUser(BaseModel):
     age: int
     about_candidate: str
     education: str
-    skills: List[CandidateProfileSkillAssociation]
+    skills: List[SkillBase]

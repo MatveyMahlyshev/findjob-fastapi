@@ -3,13 +3,14 @@ from fastapi import (
     Depends,
 )
 from fastapi.security import HTTPBearer
-
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from .auth_helpers import (
     validate_auth_user,
     create_access_token,
     create_refresh_token,
     get_current_auth_user_for_refresh,
+    http_bearer,
 )
 from .schemas import (
     TokenInfo,
@@ -19,7 +20,6 @@ from core.models import (
     User,
 )
 
-http_bearer = HTTPBearer(auto_error=False)
 
 router = APIRouter(
     tags=["Auth"],
@@ -42,6 +42,8 @@ async def auth_user(
 
 
 @router.post("/refresh/", response_model=TokenInfo, response_model_exclude_none=True)
-async def auth_refresh(user: UserAuthSchema = Depends(get_current_auth_user_for_refresh)):
+async def auth_refresh(
+    user: UserAuthSchema = Depends(get_current_auth_user_for_refresh),
+):
     access_token = create_access_token(user=user)
     return TokenInfo(access_token=access_token)

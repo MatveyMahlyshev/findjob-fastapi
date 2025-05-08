@@ -1,19 +1,11 @@
-from fastapi import (
-    Form,
-    HTTPException,
-    status,
-    Depends,
-)
+from fastapi import Form, HTTPException, status, Depends
 from jwt.exceptions import InvalidTokenError
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordBearer, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import (
-    select,
-    Result,
-)
+from sqlalchemy import select, Result
 from datetime import timedelta
 
-from core.models import User, db_helper, CandidateProfile
+from core.models import User, db_helper
 from core.config import settings
 from .utils import validate_password
 from .schemas import UserAuthSchema
@@ -22,6 +14,8 @@ from .utils import encode_jwt, decode_jwt
 TOKEN_TYPE_FIELD = "type"
 ACCESS_TOKEN_TYPE = "access"
 REFRESH_TOKEN_TYPE = "refresh"
+
+http_bearer = HTTPBearer(auto_error=False)
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login/")
 
@@ -130,30 +124,14 @@ async def get_user_by_token_sub(
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found",
+            detail="User not found"
         )
     return user
 
+
 async def get_current_auth_user_for_refresh(
     payload: dict = Depends(get_current_token_payload),
-    session: AsyncSession = Depends(db_helper.scoped_session_dependency),  # Добавляем session как зависимость
+    session: AsyncSession = Depends(db_helper.scoped_session_dependency),
 ) -> UserAuthSchema:
     validate_token_type(payload=payload, token_type=REFRESH_TOKEN_TYPE)
-    return await get_user_by_token_sub(payload=payload, session=session)  # Явно передаем session
-
-
-def get_auth_user_from_token_of_type(token_type: str):
-    def get_auth_user_from_token(
-        payload: dict = Depends(get_current_token_payload),
-        session: AsyncSession = Depends(db_helper.scoped_session_dependency), 
-    ) -> UserAuthSchema:
-        validate_token_type(
-            payload=payload,
-            token_type=token_type,
-        )
-        return get_user_by_token_sub(payload=payload, session=session)
-    return get_auth_user_from_token
-
-get_current_auth_user = get_auth_user_from_token_of_type(token_type=ACCESS_TOKEN_TYPE)
-get_current_auth_user_for_refresh = get_auth_user_from_token_of_type(token_type=REFRESH_TOKEN_TYPE)
-
+    return await get_user_by_token_sub(payload=payload, session=session)

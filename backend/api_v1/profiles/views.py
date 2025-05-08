@@ -3,12 +3,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 
 from .schemas import CandidateProfileUser
-from auth.auth_helpers import get_current_token_payload, get_current_auth_user
+from auth.auth_helpers import get_current_token_payload
 from auth.schemas import UserAuthSchema
 from . import crud
 from core.models import db_helper
+from auth.auth_helpers import http_bearer
 
-router = APIRouter(tags=["Profile"])
+router = APIRouter(
+    tags=["Profile"],
+    dependencies=[Depends(http_bearer)],
+)
 
 
 @router.get("/candidate/me/")

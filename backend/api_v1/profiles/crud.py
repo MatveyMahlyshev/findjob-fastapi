@@ -4,48 +4,60 @@ from sqlalchemy import select, Result
 from sqlalchemy.orm import selectinload
 
 from auth.auth_helpers import get_current_token_payload
-from core.models import User, CandidateProfile
+from core.models import User, CandidateProfile, CandidateProfileSkillAssociation
 from .schemas import CandidateProfileUser, SkillBase
 
 
-async def get_candidate_profile_by_token(
+from sqlalchemy.orm import selectinload
+
+
+async def get_user_with_profile_by_token(
     session: AsyncSession,
     payload: dict,
-) -> CandidateProfileUser:
-    """
-    Получение профиля кандидата по данным из JWT-токена
-    """
-    if not (email := payload.get("sub")):
+) -> dict:
+    email = payload.get("sub")
+    if not email:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token does not contain email",
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="No email in token"
         )
 
-    # Оптимизированный запрос с жадной загрузкой
     stmt = (
         select(User)
         .options(
             selectinload(User.candidate_profile)
-            .selectinload(CandidateProfile.skills)
+            .selectinload(CandidateProfile.profile_skills)
+            .selectinload(CandidateProfileSkillAssociation.skill)
         )
         .where(User.email == email)
     )
-    
-    user = (await session.execute(stmt)).scalar_one_or_none()
-    
-    if not user or not user.candidate_profile:
+
+    result = await session.execute(stmt)
+    user = result.scalar_one_or_none()
+
+    if not user:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Candidate profile not found",
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
 
-    return CandidateProfileUser(
-        email=user.email,
-        name=user.name,
-        surname=user.surname,
-        patronymic=user.patronymic,
-        age=user.candidate_profile.age,
-        about_candidate=user.candidate_profile.about,
-        education=user.candidate_profile.education,
-        skills=[SkillBase(title=skill.title) for skill in user.candidate_profile.skills]
-    )
+    if not user.candidate_profile:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Profile not found for this user",
+        )
+
+    profile_data = {
+        "email": user.email,
+        "role": user.role.value,
+        "name": user.candidate_profile.name,
+        "surname": user.candidate_profile.surname,
+        "patronymic": user.candidate_profile.patronymic,
+        "age": user.candidate_profile.age,
+        "about_candidate": user.candidate_profile.about_candidate,
+        "education": user.candidate_profile.education,
+        "skills": [
+            {"title": assoc.skill.title, "id": assoc.skill.id}
+            for assoc in user.candidate_profile.profile_skills
+        ],
+    }
+
+    return profile_data

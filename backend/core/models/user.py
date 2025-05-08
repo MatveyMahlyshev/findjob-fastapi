@@ -20,20 +20,17 @@ class UserRole(str, Enum):
 
 
 class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
     email: Mapped[str] = mapped_column(
         String(50), unique=True, index=True, nullable=False
     )
-    password_hash: Mapped[str] = mapped_column(
-        String(25),
-        nullable=False,
-    )
+    password_hash: Mapped[str] = mapped_column(String(25), nullable=False)
     role: Mapped[UserRole] = mapped_column(
-        SQLEnum(UserRole),
-        nullable=False,
-        default=UserRole.CANDIDATE,
+        SQLEnum(UserRole), nullable=False, default=UserRole.CANDIDATE
     )
 
     candidate_profile: Mapped["CandidateProfile"] = relationship(
-        "CandidateProfile",
-        back_populates="user",
+        "CandidateProfile", back_populates="user", uselist=False
     )

@@ -23,7 +23,7 @@ TOKEN_TYPE_FIELD = "type"
 ACCESS_TOKEN_TYPE = "access"
 REFRESH_TOKEN_TYPE = "refresh"
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login/")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login/")
 
 
 async def validate_auth_user(

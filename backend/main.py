@@ -5,7 +5,6 @@ from contextlib import asynccontextmanager
 from api_v1 import router as api_v1_router
 from core.config import settings
 from users.views import router as users_router
-from auth.views import router as auth_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -18,7 +17,6 @@ app.include_router(
     prefix=settings.api_v1_prefix,
 )
 app.include_router(router=users_router)
-app.include_router(router=auth_router)
 
 
 @app.get("/")

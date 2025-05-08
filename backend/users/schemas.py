@@ -33,3 +33,4 @@ class UserUpdate(UserCreate):
 class CreateUserWithProfile(BaseModel):
     user: UserCreate
     profile: CandidateProfileBase
+

@@ -12,29 +12,40 @@ from .schemas import CreateUserWithProfile
 from core.models import (
     User,
     CandidateProfile,
+    Skill,
+    CandidateProfileSkillAssociation,
 )
 
 
 async def create_user_with_profile(
     session: AsyncSession, user_profile: CreateUserWithProfile
 ) -> dict:
-    stmt = select(User.email)
-    result: Result = await session.execute(statement=stmt)
-    user_emails = set(result.scalars().all())
-    if user_profile.user.email in user_emails:
+    # Проверка существования email
+    email_exists = await session.execute(
+        select(User.email).where(User.email == user_profile.user.email)
+    )
+    if email_exists.scalar_one_or_none():
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Email already exists.",
         )
-    hashpwd = hash_password(user_profile.user.password)
+
+    # Создание пользователя
     user = User(
         email=user_profile.user.email,
-        password_hash=hashpwd,
+        password_hash=hash_password(user_profile.user.password),
         role=user_profile.user.role,
     )
     session.add(user)
     await session.flush()
 
+    # Валидация навыков
+    if not user_profile.profile.skills:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="No skills chosen."
+        )
+
+    # Создание профиля
     profile = CandidateProfile(
         surname=user_profile.profile.surname,
         name=user_profile.profile.name,
@@ -45,6 +56,22 @@ async def create_user_with_profile(
         education=user_profile.profile.education,
     )
     session.add(profile)
+    await session.flush()
+
+    # Добавление навыков
+    for skill in user_profile.profile.skills:
+        skill_obj = await session.get(Skill, skill.skill_id)
+        if not skill_obj:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Skill with id: {skill.skill_id} not available.",
+            )
+
+        association = CandidateProfileSkillAssociation(
+            candidate_profile_id=profile.id,
+            skill_id=skill.skill_id,
+        )
+        session.add(association)
 
     await session.commit()
 

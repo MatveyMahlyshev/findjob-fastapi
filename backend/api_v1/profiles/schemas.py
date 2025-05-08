@@ -1,12 +1,18 @@
 from pydantic import (
     BaseModel,
     ConfigDict,
+    EmailStr,
 )
-from typing import Annotated
+from typing import Annotated, List
 from annotated_types import (
     MinLen,
     MaxLen,
 )
+
+from api_v1.skills.schemas import SkillBase
+
+class CandidateProfileSkillAssociation(BaseModel):
+    skill_id: int
 
 
 class CandidateProfileBase(BaseModel):
@@ -16,6 +22,7 @@ class CandidateProfileBase(BaseModel):
     age: int
     about_candidate: str
     education: str
+    skills: List[CandidateProfileSkillAssociation]
 
 
 class CandidateProfile(CandidateProfileBase):
@@ -28,7 +35,19 @@ class CandidateProfileCreate(CandidateProfileBase):
 
 
 class CandidateProfileUpdate(CandidateProfileBase):
-    name: Annotated[str, MinLen(2), MaxLen(50)] | None
-    surname: Annotated[str, MinLen(2), MaxLen(50)] | None
-    patronymic: Annotated[str, MinLen(2), MaxLen(50)] | None
+    name: Annotated[str, MinLen(2), MaxLen(50)]
+    surname: Annotated[str, MinLen(2), MaxLen(50)]
+    patronymic: Annotated[str, MinLen(2), MaxLen(50)]
+    age: int
     about_candidate: str | None
+    education: str
+
+class CandidateProfileUser(BaseModel):
+    email: Annotated[EmailStr, MinLen(5), MaxLen(25)]
+    name: Annotated[str, MinLen(2), MaxLen(50)]
+    surname: Annotated[str, MinLen(2), MaxLen(50)]
+    patronymic: Annotated[str, MinLen(2), MaxLen(50)]
+    age: int
+    about_candidate: str
+    education: str
+    skills: List[CandidateProfileSkillAssociation]

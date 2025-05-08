@@ -132,11 +132,6 @@ async def get_user_by_token_sub(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found",
         )
-
-    # stmt = select(CandidateProfile).where(CandidateProfile.user_id == user.id)
-    # result = await session.execute(statement=stmt)
-    # profile: CandidateProfile = result.scalar()
-
     return user
 
 async def get_current_auth_user_for_refresh(
@@ -145,3 +140,20 @@ async def get_current_auth_user_for_refresh(
 ) -> UserAuthSchema:
     validate_token_type(payload=payload, token_type=REFRESH_TOKEN_TYPE)
     return await get_user_by_token_sub(payload=payload, session=session)  # Явно передаем session
+
+
+def get_auth_user_from_token_of_type(token_type: str):
+    def get_auth_user_from_token(
+        payload: dict = Depends(get_current_token_payload),
+        session: AsyncSession = Depends(db_helper.scoped_session_dependency), 
+    ) -> UserAuthSchema:
+        validate_token_type(
+            payload=payload,
+            token_type=token_type,
+        )
+        return get_user_by_token_sub(payload=payload, session=session)
+    return get_auth_user_from_token
+
+get_current_auth_user = get_auth_user_from_token_of_type(token_type=ACCESS_TOKEN_TYPE)
+get_current_auth_user_for_refresh = get_auth_user_from_token_of_type(token_type=REFRESH_TOKEN_TYPE)
+

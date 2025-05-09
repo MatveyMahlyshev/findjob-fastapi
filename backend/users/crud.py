@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, Result
 from fastapi import HTTPException, status
 
 
@@ -28,10 +28,10 @@ async def create_user_with_profile(
     session.add(user)
     await session.flush()
 
-    if not user_profile.profile.skills:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="No skills choosen."
-        )
+    # if not user_profile.profile.skills:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_400_BAD_REQUEST, detail="No skills choosen."
+    #     )
 
     profile = CandidateProfile(
         surname=user_profile.profile.surname,
@@ -45,18 +45,20 @@ async def create_user_with_profile(
     session.add(profile)
     await session.flush()
 
-    for skill in user_profile.profile.skills:
-        skill_obj = await session.get(Skill, skill.skill_id)
-        if not skill_obj:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Skill with id: {skill.skill_id} not available.",
-            )
+    # for skill in user_profile.profile.skills:
+    #     stmt = select(Skill).where(Skill.title==skill.title)
+    #     result: Result = await session.execute(statement=stmt)
+    #     skill_obj: Skill = result.scalar()
+    #     if not skill_obj:
+    #         raise HTTPException(
+    #             status_code=status.HTTP_404_NOT_FOUND,
+    #             detail=f"Skill with id: {skill.skill_id} not available.",
+    #         )
 
-        association = CandidateProfileSkillAssociation(
-            candidate_profile_id=profile.id, skill_id=skill.skill_id
-        )
-        session.add(association)
+    #     association = CandidateProfileSkillAssociation(
+    #         candidate_profile_id=profile.id, skill_id=skill_obj.id
+    #     )
+    #     session.add(association)
 
     await session.commit()
 

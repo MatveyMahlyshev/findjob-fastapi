@@ -2,10 +2,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
+from typing import List
 
 from core.models import User, CandidateProfile, CandidateProfileSkillAssociation
 from .schemas import CandidateProfileUser, CandidateProfileUpdate
-
+from api_v1.skills.schemas import SkillBase
+from api_v1.skills.crud import get_skill
 
 from sqlalchemy.orm import selectinload
 
@@ -85,7 +87,6 @@ async def update_candidate_profile(
     user_profile.candidate_profile.age = profile_data.age
     user_profile.candidate_profile.about_candidate = profile_data.about_candidate
     user_profile.candidate_profile.education = profile_data.education
-    # user_profile.candidate_profile.profile_skills = profile_data.skills
 
     await session.commit()
 
@@ -103,3 +104,22 @@ async def update_candidate_profile(
             for assoc in user_profile.candidate_profile.profile_skills
         ],
     }
+
+
+async def update_candidate_profile_skills(
+    skills: List[SkillBase], session: AsyncSession, payload: dict
+):
+    user = await get_user(session=session, payload=payload)
+    for association in user.candidate_profile.profile_skills:
+        await session.delete(association)
+
+    await session.flush()
+
+    for skill in skills:
+        current_skill = await get_skill(session=session, title=skill.title)
+        association = CandidateProfileSkillAssociation(
+            candidate_profile_id=user.id, skill_id=current_skill.id
+        )
+        session.add(association)
+    await session.commit()
+    return skills

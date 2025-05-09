@@ -48,7 +48,9 @@ async def update_skill(
 
 
 async def create_skill(session: AsyncSession, skill_in: SkillBase) -> Skill:
-    if await get_skill(session=session, title=skill_in.title):
+    stmt = select(Skill).where(Skill.title == skill_in.title)
+    exists: Skill | None = await session.scalar(statement=stmt)
+    if exists:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"Skill with title '{skill_in.title}' already exists.",

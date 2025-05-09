@@ -23,7 +23,7 @@ async def get_skills(
     return await crud.get_skills(session=session)
 
 
-@router.post("/", response_model=Skill, status_code=status.HTTP_201_CREATED)
+@router.post("/create/", response_model=Skill, status_code=status.HTTP_201_CREATED)
 async def create_skill(
     skill_in: SkillBase,
     session: AsyncSession = Depends(db_helper.scoped_session_dependency),
@@ -31,14 +31,14 @@ async def create_skill(
     return await crud.create_skill(session=session, skill_in=skill_in)
 
 
-@router.get("/{title}/", response_model=Skill)
+@router.get("/title/{title}/", response_model=Skill)
 async def get_skill(
     title: str, session: AsyncSession = Depends(db_helper.scoped_session_dependency)
 ):
     return await crud.get_skill(session=session, title=title)
 
 
-@router.patch("/{title}/", response_model=Skill)
+@router.patch("/edit/{title}/", response_model=Skill)
 async def update_skill(
     skill_update: SkillUpdate,
     session: AsyncSession = Depends(db_helper.scoped_session_dependency),
@@ -48,7 +48,7 @@ async def update_skill(
     )
 
 
-@router.delete("/{title}/")
+@router.delete("/delete/{title}/")
 async def delete_skill(
     skill: SkillBase,
     session: AsyncSession = Depends(db_helper.scoped_session_dependency),

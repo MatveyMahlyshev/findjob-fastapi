@@ -1,15 +1,15 @@
 from fastapi import APIRouter, Depends
-
+from fastapi.security import HTTPBearer
 
 from .auth_helpers import (
     validate_auth_user,
     create_access_token,
     create_refresh_token,
     get_current_auth_user_for_refresh,
-    http_bearer,
 )
 from .schemas import TokenInfo, UserAuthSchema
 from core.models import User
+from .dependencies import http_bearer
 
 
 router = APIRouter(

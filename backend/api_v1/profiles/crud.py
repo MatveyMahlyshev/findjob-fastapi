@@ -1,54 +1,24 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends, HTTPException, status
-from sqlalchemy import select
-from sqlalchemy.orm import selectinload
-from typing import List
 
-from core.models import User, CandidateProfile, CandidateProfileSkillAssociation
+from core.models import CandidateProfileSkillAssociation
 from .schemas import CandidateProfileUser, CandidateProfileUpdate
 from api_v1.skills.schemas import SkillBase
 from api_v1.skills.crud import get_skill
-
-from sqlalchemy.orm import selectinload
-
-
-async def get_user(session: AsyncSession, payload: dict) -> User:
-    email = payload.get("sub")
-    if not email:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="No email in token"
-        )
-
-    stmt = (
-        select(User)
-        .options(
-            selectinload(User.candidate_profile)
-            .selectinload(CandidateProfile.profile_skills)
-            .selectinload(CandidateProfileSkillAssociation.skill)
-        )
-        .where(User.email == email)
-    )
-
-    result = await session.execute(stmt)
-    user = result.scalar_one_or_none()
-
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-        )
-    return user
+from api_v1.dependencies import get_user, get_statement_for_candidate_profile
+from core.models.user import UserRole
 
 
 async def get_user_with_profile_by_token(
     session: AsyncSession, payload: dict
 ) -> CandidateProfileUser:
 
-    user = await get_user(session=session, payload=payload)
-
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-        )
+    user = await get_user(
+        session=session,
+        payload=payload,
+        stmt=await get_statement_for_candidate_profile(payload=payload),
+        user_role=UserRole.CANDIDATE,
+    )
 
     if not user.candidate_profile:
         raise HTTPException(
@@ -75,11 +45,12 @@ async def get_user_with_profile_by_token(
 async def update_candidate_profile(
     profile_data: CandidateProfileUpdate, session: AsyncSession, payload: dict
 ):
-    user_profile = await get_user(session=session, payload=payload)
-    if not user_profile:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-        )
+    user_profile = await get_user(
+        session=session,
+        payload=payload,
+        stmt=await get_statement_for_candidate_profile(payload=payload),
+        user_role=UserRole.CANDIDATE,
+    )
     user_profile.email = profile_data.email
     user_profile.name = profile_data.name
     user_profile.candidate_profile.surname = profile_data.surname
@@ -107,9 +78,15 @@ async def update_candidate_profile(
 
 
 async def update_candidate_profile_skills(
-    skills: List[SkillBase], session: AsyncSession, payload: dict
-):
-    user = await get_user(session=session, payload=payload)
+    skills: list[SkillBase], session: AsyncSession, payload: dict
+) -> list[SkillBase]:
+    user = await get_user(
+        session=session,
+        payload=payload,
+        stmt=await get_statement_for_candidate_profile(payload=payload),
+        user_role=UserRole.CANDIDATE,
+    )
+
     for association in user.candidate_profile.profile_skills:
         await session.delete(association)
 

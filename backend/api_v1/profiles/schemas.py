@@ -3,7 +3,7 @@ from pydantic import (
     ConfigDict,
     EmailStr,
 )
-from typing import Annotated, List
+from typing import Annotated
 from annotated_types import (
     MinLen,
     MaxLen,
@@ -19,7 +19,7 @@ class CandidateProfileBase(BaseModel):
     age: int
     about_candidate: str
     education: str
-    skills: List[SkillBase]
+    skills: list[SkillBase]
 
 
 class CandidateProfile(CandidateProfileBase):
@@ -34,7 +34,7 @@ class CandidateProfileUser(BaseModel):
     age: int
     about_candidate: str
     education: str
-    skills: List[SkillBase]
+    skills: list[SkillBase]
 
 
 class CandidateProfileUpdate(CandidateProfileUser):

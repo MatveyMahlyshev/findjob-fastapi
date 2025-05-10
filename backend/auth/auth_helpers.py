@@ -6,6 +6,7 @@ from core.models import User, db_helper
 from .utils import validate_password
 from .schemas import UserAuthSchema
 from . import dependencies
+import exceptions
 
 
 async def validate_auth_user(
@@ -20,7 +21,7 @@ async def validate_auth_user(
     if not user or not validate_password(
         password=password, hashed_password=user.password_hash
     ):
-        raise dependencies.UnauthorizedExceptions.INVALID_LOGIN_DATA
+        raise exceptions.UnauthorizedExceptions.INVALID_LOGIN_DATA
 
     return user
 
@@ -47,14 +48,14 @@ def create_refresh_token(user: UserAuthSchema) -> str:
 async def get_user_by_token_sub(payload: dict, session: AsyncSession) -> UserAuthSchema:
     email: str | None = payload.get("sub")
     if not email:
-        raise dependencies.UnauthorizedExceptions.NO_EMAIL
+        raise exceptions.UnauthorizedExceptions.NO_EMAIL
 
     stmt = select(User).where(User.email == email)
     result: Result = await session.execute(statement=stmt)
     user: User = result.scalar()
 
     if not user:
-        raise dependencies.UnauthorizedExceptions.INVALID_LOGIN_DATA
+        raise exceptions.UnauthorizedExceptions.INVALID_LOGIN_DATA
     return user
 
 

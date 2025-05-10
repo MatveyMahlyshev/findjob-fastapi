@@ -4,6 +4,7 @@ from fastapi import HTTPException, status
 
 from .schemas import SkillBase
 from core.models import Skill
+import exceptions
 
 
 def to_capitalize(string: str) -> str:
@@ -22,10 +23,7 @@ async def get_skill(session: AsyncSession, title: str) -> Skill:
     stmt = select(Skill).where(Skill.title == title)
     skill: Skill | None = await session.scalar(statement=stmt)
     if skill is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Skill {title} is not found.",
-        )
+        raise exceptions.NotFoundException.SKILL_NOT_FOUND
     return skill
 
 
@@ -36,10 +34,7 @@ async def update_skill(
     stmt = select(Skill).where(Skill.title == new_title)
     updated_skill: Skill | None = await session.scalar(statement=stmt)
     if updated_skill is not None:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=f"Skill with title '{new_title}' already exists.",
-        )
+        raise exceptions.ConflictException.SKILL_ALREADY_EXISTS
     skill = await get_skill(session=session, title=title)
     new_title = to_capitalize(new_title)
     skill.title = new_title
@@ -51,10 +46,7 @@ async def create_skill(session: AsyncSession, skill_in: SkillBase) -> Skill:
     stmt = select(Skill).where(Skill.title == skill_in.title)
     exists: Skill | None = await session.scalar(statement=stmt)
     if exists:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=f"Skill with title '{skill_in.title}' already exists.",
-        )
+        raise exceptions.ConflictException.SKILL_ALREADY_EXISTS
     skill = Skill(**skill_in.model_dump())
     skill.title = to_capitalize(skill.title)
     session.add(skill)

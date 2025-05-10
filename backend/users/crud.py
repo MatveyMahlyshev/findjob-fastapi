@@ -4,27 +4,32 @@ from fastapi import HTTPException, status
 
 
 from auth.utils import hash_password
-from .schemas import CreateUserWithProfile
-from core.models import User, CandidateProfile
+from .schemas import CreateUserWithProfile, UserCreate
+from core.models import User, CandidateProfile, UserRole
+import exceptions
+
+async def create_user(session: AsyncSession, user: UserCreate):
+    email_exists = await session.execute(
+        select(User.email).where(User.email == user.email)
+    )
+    if email_exists.scalar_one_or_none():
+        raise exceptions.ConflictException.EMAIL_ALREADY_EXISTS
+    new_user = User(
+        email=user.email,
+        password_hash=hash_password(user.password),
+        role=user.role,
+    )
+    if user.role == UserRole.HR:
+        session.add(new_user)
+        await session.commit()
+
+    return new_user
 
 
 async def create_user_with_profile(
     session: AsyncSession, user_profile: CreateUserWithProfile
 ) -> dict:
-    email_exists = await session.execute(
-        select(User.email).where(User.email == user_profile.user.email)
-    )
-    if email_exists.scalar_one_or_none():
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Email already exists.",
-        )
-
-    user = User(
-        email=user_profile.user.email,
-        password_hash=hash_password(user_profile.user.password),
-        role=user_profile.user.role,
-    )
+    user = await create_user(session=session, user=user_profile.user)
     session.add(user)
     await session.flush()
 

@@ -5,7 +5,7 @@ from core.models import db_helper
 from .schemas import CreateUserWithProfile, UserCreate
 from . import crud
 
-router = APIRouter(tags=["Users"], prefix="/users")
+router = APIRouter(tags=["Users"])
 
 
 @router.post("/register/candidate/", status_code=status.HTTP_201_CREATED)

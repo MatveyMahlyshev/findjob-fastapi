@@ -30,12 +30,7 @@ class CandidateProfile(UserRelationMixin, Base):
     age: Mapped[int] = mapped_column(Integer)
     about_candidate: Mapped[str | None] = mapped_column(Text)
     education: Mapped[str] = mapped_column(Text)
-    # user_id: Mapped[int] = mapped_column(
-    #     Integer,
-    #     ForeignKey("users.id"),
-    #     unique=True,
-    # )
-
+  
     profile_skills: Mapped[list["CandidateProfileSkillAssociation"]] = relationship(
         back_populates="candidate_profile"
     )

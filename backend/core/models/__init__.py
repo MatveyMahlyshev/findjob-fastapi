@@ -7,11 +7,12 @@ __all__ = (
     "db_helper",
     "Vacancy",
     "VacancySkillAssociation",
+    "UserRole",
 )
 
 
 from .base import Base
-from .user import User
+from .user import User, UserRole
 from .candidate_profile import CandidateProfile
 from .skill import Skill
 from .candidate_profile_skill_association import CandidateProfileSkillAssociation

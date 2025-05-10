@@ -7,7 +7,7 @@ class VacancyBase(BaseModel):
     title: str
     company: str
     description: str
-    skills: list[SkillBase]
+    vacancy_skills: list[SkillBase]
 
 
 class Vacancy(VacancyBase):

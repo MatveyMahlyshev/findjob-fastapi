@@ -2,12 +2,11 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .schemas import CandidateProfileUser, CandidateProfileUpdate
-from auth.dependencies import get_current_token_payload
+from auth.dependencies import get_current_token_payload, http_bearer
 from . import crud
 from core.models import db_helper
-from auth.dependencies import http_bearer
-from api_v1.skills.schemas import SkillBase
 
+from api_v1.skills.schemas import SkillBase
 
 
 router = APIRouter(

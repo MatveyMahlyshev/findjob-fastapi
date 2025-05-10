@@ -1,12 +1,13 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import Depends, HTTPException, status
 
 from core.models import CandidateProfileSkillAssociation
 from .schemas import CandidateProfileUser, CandidateProfileUpdate
 from api_v1.skills.schemas import SkillBase
 from api_v1.skills.crud import get_skill
-from api_v1.dependencies import get_user, get_statement_for_candidate_profile
+from api_v1.dependencies import get_user
+from .dependencies import get_statement_for_candidate_profile
 from core.models.user import UserRole
+import exceptions
 
 
 async def get_user_with_profile_by_token(
@@ -21,10 +22,7 @@ async def get_user_with_profile_by_token(
     )
 
     if not user.candidate_profile:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Profile not found for this user",
-        )
+        raise exceptions.NotFoundException.PROFILE_NOT_FOUND
 
     return {
         "email": user.email,
@@ -47,9 +45,8 @@ async def update_candidate_profile(
 ):
     user_profile = await get_user(
         session=session,
-        payload=payload,
+        email=payload.get("sub"),
         stmt=await get_statement_for_candidate_profile(payload=payload),
-        user_role=UserRole.CANDIDATE,
     )
     user_profile.email = profile_data.email
     user_profile.name = profile_data.name
@@ -82,9 +79,8 @@ async def update_candidate_profile_skills(
 ) -> list[SkillBase]:
     user = await get_user(
         session=session,
-        payload=payload,
+        email=payload.get("sub"),
         stmt=await get_statement_for_candidate_profile(payload=payload),
-        user_role=UserRole.CANDIDATE,
     )
 
     for association in user.candidate_profile.profile_skills:

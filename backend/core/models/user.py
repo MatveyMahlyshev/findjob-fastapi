@@ -7,6 +7,7 @@ from . import Base
 
 if TYPE_CHECKING:
     from .candidate_profile import CandidateProfile
+    from .vacancy import Vacancy
 
 
 class UserRole(str, Enum):
@@ -30,3 +31,5 @@ class User(Base):
     candidate_profile: Mapped["CandidateProfile"] = relationship(
         "CandidateProfile", back_populates="user", uselist=False
     )
+
+    vacancies: Mapped[list["Vacancy"]] = relationship("Vacancy", back_populates="hr")

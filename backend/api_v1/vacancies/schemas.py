@@ -14,5 +14,5 @@ class Vacancy(VacancyBase):
     model_config = ConfigDict(from_attributes=True)
     id: int
 
-class VacancyCreate(BaseModel):
+class VacancyCreate(VacancyBase):
     pass

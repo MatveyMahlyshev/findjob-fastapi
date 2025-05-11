@@ -3,9 +3,10 @@ from sqlalchemy import select
 
 from .schemas import VacancyCreate
 from api_v1.dependencies import get_user
-from core.models import User, UserRole, Vacancy, Skill
+from core.models import User, UserRole, Vacancy, Skill, VacancySkillAssociation
 import exceptions
-
+from api_v1.skills.crud import get_skill
+from auth.dependencies import check_access
 
 async def create_vacancy(
     session: AsyncSession, payload: dict, vacancy_in: VacancyCreate
@@ -14,15 +15,26 @@ async def create_vacancy(
     stmt = select(User).where(User.email == email)
     user = await get_user(session=session, email=email, stmt=stmt)
 
-    if user.role != UserRole.HR:
-        raise exceptions.AccessDeniesException.ACCESS_DENIED
+    await check_access(user=user, role=UserRole.HR)
     vacancy_data = vacancy_in.model_dump()
-    skills_data:dict[str, str] = vacancy_data.pop("vacancy_skills", [])
+    skills_data: list[dict[str, str]] = vacancy_data.pop("vacancy_skills", [])
 
     vacancy = Vacancy(**vacancy_data)
-    for skill in skills_data:
-        print(skill)
-    print(vacancy.vacancy_skills)
+    vacancy.hr_id = user.id
     session.add(vacancy)
+    await session.flush()
+
+    for skill_data in skills_data:
+        title = skill_data.get("title")
+        if title is None:
+            raise exceptions.UnprocessableEntityException.NO_TITLE_KEY
+        skill = await get_skill(session=session, title=title)
+        association = VacancySkillAssociation(vacancy_id=vacancy.id, skill_id=skill.id)
+        session.add(association)
     await session.commit()
-    return vacancy
+    return {
+        "title": vacancy.title,
+        "company": vacancy.company,
+        "description": vacancy.description,
+        "vacancy_skills": skills_data,
+    }

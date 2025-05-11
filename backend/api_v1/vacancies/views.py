@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from auth.dependencies import http_bearer, get_current_token_payload
 from core.models import db_helper
 from . import crud
-from .schemas import VacancyBase, Vacancy
+from .schemas import VacancyCreate
 
 router = APIRouter(tags=["Vacancy"])
 
@@ -13,9 +13,9 @@ router_with_auth = APIRouter(dependencies=[Depends(http_bearer)])
 router_without_auth = APIRouter()
 
 
-@router_with_auth.post("/new/", response_model=Vacancy)
+@router_with_auth.post("/new/", response_model=VacancyCreate)
 async def create_vacancy(
-    vacancy: VacancyBase,
+    vacancy: VacancyCreate,
     payload: dict = Depends(get_current_token_payload),
     session: AsyncSession = Depends(db_helper.scoped_session_dependency),
 ):

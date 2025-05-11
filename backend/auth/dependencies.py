@@ -7,6 +7,7 @@ from datetime import timedelta
 from .utils import encode_jwt, decode_jwt
 from core.config import settings
 import exceptions
+from core.models import User
 
 
 class TokenTypeFields:
@@ -48,3 +49,8 @@ def validate_token_type(payload: dict, token_type: str) -> bool:
     if payload.get(TokenTypeFields.TOKEN_TYPE_FIELD) == token_type:
         return True
     raise exceptions.UnauthorizedExceptions.ERROR_TOKEN_TYPE
+
+
+async def check_access(user: User, role: str):
+    if user.role != role:
+        raise exceptions.AccessDeniesException.ACCESS_DENIED

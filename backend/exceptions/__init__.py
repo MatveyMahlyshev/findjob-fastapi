@@ -46,3 +46,9 @@ class ConflictException:
         status_code=status.HTTP_409_CONFLICT,
         detail="Email already exists.",
     )
+
+
+class UnprocessableEntityException:
+    NO_TITLE_KEY = HTTPException(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="No 'title' key."
+    )

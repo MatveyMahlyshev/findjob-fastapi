@@ -13,12 +13,12 @@ import exceptions
 async def get_user_with_profile_by_token(
     session: AsyncSession, payload: dict
 ) -> CandidateProfileUser:
+    email = payload.get("sub")
 
     user = await get_user(
         session=session,
-        payload=payload,
         stmt=await get_statement_for_candidate_profile(payload=payload),
-        user_role=UserRole.CANDIDATE,
+        email=email,
     )
 
     if not user.candidate_profile:
@@ -82,17 +82,19 @@ async def update_candidate_profile_skills(
         email=payload.get("sub"),
         stmt=await get_statement_for_candidate_profile(payload=payload),
     )
-
     for association in user.candidate_profile.profile_skills:
         await session.delete(association)
-
     await session.flush()
+
+    
 
     for skill in skills:
         current_skill = await get_skill(session=session, title=skill.title)
         association = CandidateProfileSkillAssociation(
-            candidate_profile_id=user.id, skill_id=current_skill.id
+            candidate_profile_id=user.candidate_profile.id, skill_id=current_skill.id
         )
         session.add(association)
     await session.commit()
     return skills
+
+

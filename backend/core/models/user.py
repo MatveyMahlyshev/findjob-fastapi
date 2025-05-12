@@ -23,7 +23,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(
         String(50), unique=True, index=True, nullable=False
     )
-    password_hash: Mapped[str] = mapped_column(String(25), nullable=False)
+    password_hash: Mapped[str] = mapped_column(String(60), nullable=False)
     role: Mapped[UserRole] = mapped_column(
         SQLEnum(UserRole), nullable=False, default=UserRole.CANDIDATE
     )
@@ -32,4 +32,4 @@ class User(Base):
         "CandidateProfile", back_populates="user", uselist=False
     )
 
-    vacancies: Mapped[list["Vacancy"]] = relationship("Vacancy", back_populates="hr")
+    vacancy: Mapped[list["Vacancy"]] = relationship("Vacancy", back_populates="hr")

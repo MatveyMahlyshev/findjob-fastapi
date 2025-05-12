@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
 
 class Vacancy(Base):
+    __tablename__ = "vacancies"
 
     title: Mapped[str] = mapped_column(nullable=False, index=True)
     company: Mapped[str] = mapped_column(nullable=False)
@@ -27,5 +28,5 @@ class Vacancy(Base):
 
     hr: Mapped["User"] = relationship(
         "User",
-        back_populates="vacancies",
+        back_populates="vacancy",
     )

@@ -21,7 +21,7 @@ async def validate_auth_user(
     if not user or not validate_password(
         password=password, hashed_password=user.password_hash
     ):
-        raise exceptions.UnauthorizedExceptions.INVALID_LOGIN_DATA
+        raise exceptions.UnauthorizedException.INVALID_LOGIN_DATA
 
     return user
 
@@ -48,14 +48,14 @@ def create_refresh_token(user: UserAuthSchema) -> str:
 async def get_user_by_token_sub(payload: dict, session: AsyncSession) -> UserAuthSchema:
     email: str | None = payload.get("sub")
     if not email:
-        raise exceptions.UnauthorizedExceptions.NO_EMAIL
+        raise exceptions.UnauthorizedException.NO_EMAIL
 
     stmt = select(User).where(User.email == email)
     result: Result = await session.execute(statement=stmt)
     user: User = result.scalar()
 
     if not user:
-        raise exceptions.UnauthorizedExceptions.INVALID_LOGIN_DATA
+        raise exceptions.UnauthorizedException.INVALID_LOGIN_DATA
     return user
 
 

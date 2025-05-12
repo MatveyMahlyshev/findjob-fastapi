@@ -36,14 +36,15 @@ def decode_jwt(
     return decoded
 
 
-def hash_password(password: str) -> bytes:
+def hash_password(password: str) -> str:
     salt = bcrypt.gensalt()
     pwd_bytes: bytes = password.encode()
-    return bcrypt.hashpw(password=pwd_bytes, salt=salt)
+    hashed: bytes = bcrypt.hashpw(password=pwd_bytes, salt=salt)
+    return hashed.decode("utf-8")
 
 
-def validate_password(password: str, hashed_password: bytes) -> bool:
+def validate_password(password: str, hashed_password: str) -> bool:
     return bcrypt.checkpw(
-        password=password.encode(),
-        hashed_password=hashed_password,
+        password.encode(),
+        hashed_password.encode()
     )

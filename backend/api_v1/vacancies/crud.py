@@ -87,7 +87,7 @@ async def get_vacancies_by_user(payload: dict, session: AsyncSession) -> list[Va
     stmt = (
         select(User)
         .options(
-            selectinload(User.vacancies)
+            selectinload(User.vacancy)
             .selectinload(Vacancy.vacancy_skills)
             .selectinload(VacancySkillAssociation.skill)
         )
@@ -95,10 +95,8 @@ async def get_vacancies_by_user(payload: dict, session: AsyncSession) -> list[Va
     )
     user = await get_user(session=session, email=email, stmt=stmt)
     await check_access(user=user, role=UserRole.HR)
-    print(user.vacancies)
-    for vacancy in user.vacancies:
-        print(vacancy.hr_id)
-    return user.vacancies
+
+    return user.vacancy
 
 
 async def update_vacancy(
@@ -119,3 +117,15 @@ async def update_vacancy(
     session.add(vacancy)
     await session.commit()
     return vacancy
+
+
+async def delete_vacancy(vacancy_id: int, payload: dict, session: AsyncSession):
+    email = payload.get("sub")
+    stmt = select(User).where(User.email == email)
+    user = await get_user(session=session, email=email, stmt=stmt)
+    await check_access(user=user, role=UserRole.HR)
+
+    vacancy = await get_vacancy_by_id(vacancy_id=vacancy_id, session=session)
+    await session.delete(vacancy)
+    await session.commit()
+    return None

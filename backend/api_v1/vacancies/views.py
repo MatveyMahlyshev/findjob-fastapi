@@ -59,9 +59,15 @@ async def update_vacancy(
     )
 
 
-@router_with_auth.delete("/delete/")
-async def delete_vacancy():
-    pass
+@router_with_auth.delete("/delete/{vacancy_id}")
+async def delete_vacancy(
+    vacancy_id: int,
+    payload: dict = Depends(get_current_token_payload),
+    session: AsyncSession = Depends(db_helper.scoped_session_dependency),
+):
+    return await crud.delete_vacancy(
+        vacancy_id=vacancy_id, payload=payload, session=session
+    )
 
 
 router.include_router(router=router_without_auth)

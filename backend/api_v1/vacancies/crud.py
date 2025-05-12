@@ -20,17 +20,14 @@ async def create_vacancy(session: AsyncSession, payload: dict, vacancy_in: Vacan
     raw_skills = vacancy_data.pop("vacancy_skills", [])
     skills_data = [item.get("skill") for item in raw_skills]
 
-    # Проверка title у всех навыков
     titles = [s.get("title") for s in skills_data]
     if any(t is None for t in titles):
         raise exceptions.UnprocessableEntityException.NO_TITLE_KEY
 
-    # Массовый запрос навыков
     stmt = select(Skill).where(Skill.title.in_(titles))
     result = await session.execute(stmt)
     skills = {skill.title: skill for skill in result.scalars()}
 
-    # Создание вакансии
     vacancy = Vacancy(**vacancy_data, hr_id=user.id)
     session.add(vacancy)
     await session.flush()
@@ -102,3 +99,23 @@ async def get_vacancies_by_user(payload: dict, session: AsyncSession) -> list[Va
     for vacancy in user.vacancies:
         print(vacancy.hr_id)
     return user.vacancies
+
+
+async def update_vacancy(
+    vacancy_in: VacancyBase, vacancy_id: int, payload: dict, session: AsyncSession
+):
+
+    email = payload.get("sub")
+    stmt = select(User).where(User.email == email)
+    user = await get_user(session=session, email=email, stmt=stmt)
+    await check_access(user=user, role=UserRole.HR)
+
+    vacancy = await get_vacancy_by_id(vacancy_id=vacancy_id, session=session)
+    if vacancy.hr_id != user.id:
+        raise exceptions.AccessDeniesException.ACCESS_DENIED
+    vacancy.company = vacancy_in.company
+    vacancy.description = vacancy_in.description
+    vacancy.title = vacancy_in.title
+    session.add(vacancy)
+    await session.commit()
+    return vacancy

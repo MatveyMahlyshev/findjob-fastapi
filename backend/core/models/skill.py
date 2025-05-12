@@ -16,10 +16,13 @@ class Skill(Base):
     title: Mapped[str] = mapped_column(
         String(25), nullable=False, unique=True, index=True
     )
+
     skill_profiles: Mapped[list["CandidateProfileSkillAssociation"]] = relationship(
         back_populates="skill",
     )
 
     skill_vacancies: Mapped[list["VacancySkillAssociation"]] = relationship(
         back_populates="skill",
+        cascade="all, delete-orphan",  # если нужно удалять ассоциации при удалении skill
+        passive_deletes=True,
     )

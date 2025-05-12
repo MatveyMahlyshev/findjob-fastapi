@@ -12,6 +12,7 @@ class VacancyBase(BaseModel):
     company: str
     description: str
     vacancy_skills: list[VacancySkillAssociationRead]
+    
 
 
 class Vacancy(VacancyBase):

@@ -47,12 +47,16 @@ async def get_vacancy_by_id(
     return await crud.get_vacancy_by_id(vacancy_id=vacancy_id, session=session)
 
 
-@router_with_auth.put("/edit/", response_model=Vacancy)
+@router_with_auth.put("/edit/{vacancy_id}/", response_model=Vacancy)
 async def update_vacancy(
     vacancy_in: VacancyBase,
+    vacancy_id: int,
+    payload: dict = Depends(get_current_token_payload),
     session: AsyncSession = Depends(db_helper.scoped_session_dependency),
 ):
-    return await crud.update_vacancy(vacancy_in=vacancy_in, session=session)
+    return await crud.update_vacancy(
+        vacancy_in, vacancy_id=vacancy_id, payload=payload, session=session
+    )
 
 
 @router_with_auth.delete("/delete/")

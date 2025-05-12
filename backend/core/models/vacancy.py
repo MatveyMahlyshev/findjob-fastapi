@@ -20,8 +20,11 @@ class Vacancy(Base):
     )
 
     vacancy_skills: Mapped[list["VacancySkillAssociation"]] = relationship(
-        back_populates="vacancy"
+        back_populates="vacancy",
+        cascade="all, delete-orphan",  # SQLAlchemy удалит связи
+        passive_deletes=True,  # позволит ondelete="CASCADE" работать
     )
+
     hr: Mapped["User"] = relationship(
         "User",
         back_populates="vacancies",

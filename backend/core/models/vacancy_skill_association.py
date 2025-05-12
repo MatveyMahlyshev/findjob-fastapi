@@ -15,7 +15,10 @@ class VacancySkillAssociation(Base):
     __table_args__ = (
         UniqueConstraint("vacancy_id", "skill_id", name="idx_unique_vacancy_skill"),
     )
-    vacancy_id: Mapped[int] = mapped_column(ForeignKey("vacancys.id"))
+
+    vacancy_id: Mapped[int] = mapped_column(
+        ForeignKey("vacancys.id", ondelete="CASCADE")  # ВАЖНО: ondelete добавлен
+    )
     skill_id: Mapped[int] = mapped_column(ForeignKey("skills.id"))
 
     vacancy: Mapped["Vacancy"] = relationship(back_populates="vacancy_skills")

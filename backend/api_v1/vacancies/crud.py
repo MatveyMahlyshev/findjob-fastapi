@@ -9,6 +9,7 @@ import exceptions
 from api_v1.skills.crud import get_skill
 from auth.dependencies import check_access
 
+
 async def create_vacancy(
     session: AsyncSession, payload: dict, vacancy_in: VacancyCreate
 ):
@@ -40,14 +41,35 @@ async def create_vacancy(
         "vacancy_skills": skills_data,
     }
 
-async def get_vacanies(session: AsyncSession):
+
+async def get_vacanies(session: AsyncSession) -> list[Vacancy]:
     stmt = (
         select(Vacancy)
         .options(
-            selectinload(Vacancy.vacancy_skills).selectinload(VacancySkillAssociation.skill)
+            selectinload(Vacancy.vacancy_skills).selectinload(
+                VacancySkillAssociation.skill
+            )
         )
         .order_by(Vacancy.id)
     )
     result: Result = await session.execute(statement=stmt)
     vacancies = list(result.scalars().all())
     return vacancies
+
+
+async def get_vacancy_by_id(vacancy_id: int, session: AsyncSession) -> Vacancy:
+    stmt = (
+        select(Vacancy)
+        .options(
+            selectinload(Vacancy.vacancy_skills).selectinload(
+                VacancySkillAssociation.skill
+            )
+        )
+        .where(Vacancy.id == vacancy_id)
+    )
+    result: Result = await session.execute(statement=stmt)
+    vacancy: Vacancy = result.scalar_one_or_none()
+
+    if vacancy is None:
+        raise exceptions.NotFoundException.VACANCY_NOT_FOUND
+    return vacancy

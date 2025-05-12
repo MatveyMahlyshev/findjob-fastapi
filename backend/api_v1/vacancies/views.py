@@ -31,9 +31,12 @@ async def get_vacancies(
     return await crud.get_vacanies(session=session)
 
 
-@router_without_auth.get("/id/{vacancy_id}/")
-async def get_vacancy_by_id():
-    pass
+@router_without_auth.get("/id/{vacancy_id}/", response_model=Vacancy)
+async def get_vacancy_by_id(
+    vacancy_id: int,
+    session: AsyncSession = Depends(db_helper.scoped_session_dependency),
+):
+    return await crud.get_vacancy_by_id(vacancy_id=vacancy_id, session=session)
 
 
 @router_with_auth.put("/edit/")

@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, Result
+from sqlalchemy.orm import selectinload
 
 from .schemas import VacancyCreate
 from api_v1.dependencies import get_user
@@ -38,3 +39,15 @@ async def create_vacancy(
         "description": vacancy.description,
         "vacancy_skills": skills_data,
     }
+
+async def get_vacanies(session: AsyncSession):
+    stmt = (
+        select(Vacancy)
+        .options(
+            selectinload(Vacancy.vacancy_skills).selectinload(VacancySkillAssociation.skill)
+        )
+        .order_by(Vacancy.id)
+    )
+    result: Result = await session.execute(statement=stmt)
+    vacancies = list(result.scalars().all())
+    return vacancies

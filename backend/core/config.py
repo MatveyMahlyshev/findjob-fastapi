@@ -18,7 +18,7 @@ class AuthJWT(BaseModel):
 
 
 class DBSettings(BaseModel):
-    url: str = f"sqlite+aiosqlite:///{DB_PATH}"
+    url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/fastapi_db"
     echo: bool = True
 
 

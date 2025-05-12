@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from auth.dependencies import http_bearer, get_current_token_payload
 from core.models import db_helper
 from . import crud
-from .schemas import VacancyCreate, Vacancy
+from .schemas import Vacancy, VacancyBase
 
 router = APIRouter(tags=["Vacancy"])
 
@@ -13,15 +13,23 @@ router_with_auth = APIRouter(dependencies=[Depends(http_bearer)])
 router_without_auth = APIRouter()
 
 
-@router_with_auth.post("/new/", response_model=VacancyCreate)
+@router_with_auth.post("/new/", response_model=VacancyBase)
 async def create_vacancy(
-    vacancy: VacancyCreate,
+    vacancy: VacancyBase,
     payload: dict = Depends(get_current_token_payload),
     session: AsyncSession = Depends(db_helper.scoped_session_dependency),
 ):
     return await crud.create_vacancy(
         session=session, payload=payload, vacancy_in=vacancy
     )
+
+
+@router_with_auth.get("/company/", response_model=list[Vacancy])
+async def get_vacancies_by_user(
+    payload: dict = Depends(get_current_token_payload),
+    session: AsyncSession = Depends(db_helper.scoped_session_dependency),
+):
+    return await crud.get_vacancies_by_user(payload=payload, session=session)
 
 
 @router_without_auth.get("/", response_model=list[Vacancy])
@@ -39,9 +47,12 @@ async def get_vacancy_by_id(
     return await crud.get_vacancy_by_id(vacancy_id=vacancy_id, session=session)
 
 
-@router_with_auth.put("/edit/")
-async def update_vacancy():
-    pass
+@router_with_auth.put("/edit/", response_model=Vacancy)
+async def update_vacancy(
+    vacancy_in: VacancyBase,
+    session: AsyncSession = Depends(db_helper.scoped_session_dependency),
+):
+    return await crud.update_vacancy(vacancy_in=vacancy_in, session=session)
 
 
 @router_with_auth.delete("/delete/")
@@ -49,5 +60,5 @@ async def delete_vacancy():
     pass
 
 
-router.include_router(router=router_with_auth)
 router.include_router(router=router_without_auth)
+router.include_router(router=router_with_auth)

@@ -26,7 +26,7 @@ def get_current_token_payload(
     try:
         payload = decode_jwt(token=token)
     except InvalidTokenError:
-        raise exceptions.UnauthorizedExceptions.INVALID_TOKEN
+        raise exceptions.UnauthorizedException.INVALID_TOKEN
     return payload
 
 

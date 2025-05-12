@@ -4,7 +4,7 @@ from api_v1.skills.schemas import SkillBase, Skill
 
 
 class VacancySkillAssociationRead(BaseModel):
-    skill: Skill
+    skill: SkillBase
     model_config = ConfigDict(from_attributes=True)
 
 class VacancyBase(BaseModel):
@@ -18,5 +18,3 @@ class Vacancy(VacancyBase):
     model_config = ConfigDict(from_attributes=True)
     id: int
 
-class VacancyCreate(VacancyBase):
-    pass

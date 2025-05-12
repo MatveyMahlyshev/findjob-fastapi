@@ -53,6 +53,10 @@ class ConflictException:
 
 
 class UnprocessableEntityException:
-    NO_TITLE_KEY = HTTPException(
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="No 'title' key."
+    NO_SKILL_KEY = HTTPException(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="No 'skill' key."
     )
+    NO_TITLE_KEY = HTTPException(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="No 'title' key in skill."
+    )
+

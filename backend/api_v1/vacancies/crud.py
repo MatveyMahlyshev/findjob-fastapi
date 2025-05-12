@@ -3,7 +3,7 @@ from sqlalchemy import select, Result
 from sqlalchemy.orm import selectinload
 
 from .schemas import VacancyBase
-from core.models import User, UserRole, Vacancy, VacancySkillAssociation
+from core.models import User, UserRole, Vacancy, Skill, VacancySkillAssociation
 import exceptions
 from api_v1.skills.crud import get_skill
 from auth.dependencies import check_access
@@ -11,35 +11,44 @@ from api_v1.dependencies import get_user
 
 
 async def create_vacancy(session: AsyncSession, payload: dict, vacancy_in: VacancyBase):
-
     email = payload.get("sub")
     stmt = select(User).where(User.email == email)
     user = await get_user(session=session, email=email, stmt=stmt)
     await check_access(user=user, role=UserRole.HR)
+
     vacancy_data = vacancy_in.model_dump()
-    s_data: list[dict[dict[str, str]]] = vacancy_data.pop("vacancy_skills", [])
-    skills_data = []
-    for skill in s_data:
-        skills_data.append(skill.get("skill"))
-    vacancy = Vacancy(**vacancy_data)
-    vacancy.hr_id = user.id
+    raw_skills = vacancy_data.pop("vacancy_skills", [])
+    skills_data = [item.get("skill") for item in raw_skills]
+
+    # Проверка title у всех навыков
+    titles = [s.get("title") for s in skills_data]
+    if any(t is None for t in titles):
+        raise exceptions.UnprocessableEntityException.NO_TITLE_KEY
+
+    # Массовый запрос навыков
+    stmt = select(Skill).where(Skill.title.in_(titles))
+    result = await session.execute(stmt)
+    skills = {skill.title: skill for skill in result.scalars()}
+
+    # Создание вакансии
+    vacancy = Vacancy(**vacancy_data, hr_id=user.id)
     session.add(vacancy)
     await session.flush()
 
-    for skill_data in skills_data:
-        title = skill_data.get("title")
-        if title is None:
-            raise exceptions.UnprocessableEntityException.NO_TITLE_KEY
-        skill = await get_skill(session=session, title=title)
-        association = VacancySkillAssociation(vacancy_id=vacancy.id, skill_id=skill.id)
-        session.add(association)
-    vacancy_skills = [{"skill": i} for i in skills_data]
+    # Ассоциации
+    associations = [
+        VacancySkillAssociation(vacancy_id=vacancy.id, skill_id=skills[title].id)
+        for title in titles
+    ]
+    session.add_all(associations)
+
     await session.commit()
+
     return {
         "title": vacancy.title,
         "company": vacancy.company,
         "description": vacancy.description,
-        "vacancy_skills": vacancy_skills,
+        "vacancy_skills": [{"skill": {"title": title}} for title in titles],
     }
 
 

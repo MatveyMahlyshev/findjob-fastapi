@@ -33,7 +33,11 @@ class NotFoundException:
     )
     SKILL_NOT_FOUND = HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
-        detail="Skill not found for this user",
+        detail="Skill not found.",
+    )
+    VACANCY_NOT_FOUND = HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="Vacancy not found.",
     )
 
 

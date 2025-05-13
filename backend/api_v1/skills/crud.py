@@ -26,6 +26,13 @@ async def get_skill(session: AsyncSession, title: str) -> Skill:
         raise exceptions.NotFoundException.SKILL_NOT_FOUND
     return skill
 
+async def get_skill_by_id(session: AsyncSession, skill_id: int) -> Skill:
+    stmt = select(Skill).where(Skill.id == skill_id)
+    skill: Skill | None = await session.scalar(statement=stmt)
+    if skill is None:
+        raise exceptions.NotFoundException.SKILL_NOT_FOUND
+    return skill
+
 
 async def update_skill(
     session: AsyncSession, title: str, new_title: str

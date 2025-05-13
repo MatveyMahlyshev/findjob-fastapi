@@ -1,4 +1,5 @@
 from enum import Enum
+from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 from sqlalchemy import ForeignKey
 import datetime
@@ -22,7 +23,7 @@ class VacancyResponseStatus(str, Enum):
 class VacancyResponse(Base):
 
     candidate_profile_id: Mapped[int] = mapped_column(
-        ForeignKey("candidate_profiles.id")
+        ForeignKey("candidateprofiles.id")
     )
     vacancy_id: Mapped[int] = mapped_column(ForeignKey("vacancies.id"))
 

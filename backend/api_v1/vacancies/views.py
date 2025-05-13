@@ -69,6 +69,16 @@ async def delete_vacancy(
         vacancy_id=vacancy_id, payload=payload, session=session
     )
 
+@router_with_auth.post("/vacancy/{vacancy_id}/respond/")
+async def delete_vacancy(
+    vacancy_id: int,
+    payload: dict = Depends(get_current_token_payload),
+    session: AsyncSession = Depends(db_helper.scoped_session_dependency),
+):
+    return await crud.make_respond(
+        vacancy_id=vacancy_id, payload=payload, session=session
+    )
+
 
 router.include_router(router=router_without_auth)
 router.include_router(router=router_with_auth)

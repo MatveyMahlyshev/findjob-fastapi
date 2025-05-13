@@ -39,6 +39,10 @@ class NotFoundException:
         status_code=status.HTTP_404_NOT_FOUND,
         detail="Vacancy not found.",
     )
+    TEST_NOT_FOUND = HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="Test not found.",
+    )
 
 
 class ConflictException:
@@ -57,6 +61,6 @@ class UnprocessableEntityException:
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="No 'skill' key."
     )
     NO_TITLE_KEY = HTTPException(
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="No 'title' key in skill."
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        detail="No 'title' key in skill.",
     )
-

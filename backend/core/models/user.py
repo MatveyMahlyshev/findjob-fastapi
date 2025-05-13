@@ -8,6 +8,7 @@ from . import Base
 if TYPE_CHECKING:
     from .candidate_profile import CandidateProfile
     from .vacancy import Vacancy
+    from .vacancy_response import VacancyResponse
 
 
 class UserRole(str, Enum):

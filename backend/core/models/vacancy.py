@@ -8,6 +8,7 @@ from .mixins import UserRelationMixin
 
 if TYPE_CHECKING:
     from .vacancy_skill_association import VacancySkillAssociation
+    from .vacancy_response import VacancyResponse
 
 
 class Vacancy(Base):
@@ -22,11 +23,13 @@ class Vacancy(Base):
 
     vacancy_skills: Mapped[list["VacancySkillAssociation"]] = relationship(
         back_populates="vacancy",
-        cascade="all, delete-orphan",  # SQLAlchemy удалит связи
-        passive_deletes=True,  # позволит ondelete="CASCADE" работать
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     hr: Mapped["User"] = relationship(
         "User",
         back_populates="vacancy",
     )
+
+    responses: Mapped[list["VacancyResponse"]] = relationship(back_populates="vacancy")

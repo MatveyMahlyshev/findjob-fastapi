@@ -5,6 +5,7 @@ from auth.views import router as auth_router
 from api_v1.profiles.views import router as profile_router
 from api_v1.vacancies.views import router as vacancy_router
 from users.views import router as users_router
+from api_v1.skill_tests.views import router as skill_tests_router
 
 router = APIRouter()
 router.include_router(
@@ -26,4 +27,8 @@ router.include_router(
 router.include_router(
     router=users_router,
     prefix="/users",
+)
+router.include_router(
+    router=skill_tests_router,
+    prefix="/skill_test",
 )

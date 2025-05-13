@@ -21,6 +21,8 @@ if TYPE_CHECKING:
 
 
 class CandidateProfile(UserRelationMixin, Base):
+    __tablename__ = "candidate_profiles"
+
     _user_back_populates = "candidate_profile"
     _user_id_unique: bool = True
 

@@ -19,13 +19,14 @@ class VacancyResponseStatus(str, Enum):
     rejected = "rejected"
     accepted = "accepted"
 
-
 class VacancyResponse(Base):
-
+    __tablename__ = "vacancy_responses"
     candidate_profile_id: Mapped[int] = mapped_column(
-        ForeignKey("candidateprofiles.id")
+        ForeignKey("candidate_profiles.id", ondelete="CASCADE")
     )
-    vacancy_id: Mapped[int] = mapped_column(ForeignKey("vacancies.id"))
+    vacancy_id: Mapped[int] = mapped_column(
+        ForeignKey("vacancies.id", ondelete="CASCADE")
+    )
 
     created_at: Mapped[datetime.datetime] = mapped_column(
         default=datetime.datetime.utcnow
@@ -39,7 +40,11 @@ class VacancyResponse(Base):
 
     test_link: Mapped[Optional[str]] = mapped_column(nullable=True)
 
-    candidate: Mapped["CandidateProfile"] = relationship(
-        back_populates="vacancy_responses"
+    candidate_profile: Mapped["CandidateProfile"] = relationship(
+        back_populates="vacancy_responses",
+        passive_deletes=True
     )
-    vacancy: Mapped["Vacancy"] = relationship(back_populates="responses")
+    vacancy: Mapped["Vacancy"] = relationship(
+        back_populates="responses",
+        passive_deletes=True
+    )

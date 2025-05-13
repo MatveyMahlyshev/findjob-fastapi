@@ -10,14 +10,14 @@ if TYPE_CHECKING:
 
 
 class CandidateProfileSkillAssociation(Base):
-    __tablename__ = "candidate_profile_skill_association"
+    __tablename__ = "candidate_profile_skill_associations"
     __table_args__ = (
         UniqueConstraint(
             "candidate_profile_id", "skill_id", name="idx_unique_order_product"
         ),
     )
     candidate_profile_id: Mapped[int] = mapped_column(
-        ForeignKey("candidateprofiles.id")
+        ForeignKey("candidate_profiles.id")
     )
     skill_id: Mapped[int] = mapped_column(ForeignKey("skills.id"))
 

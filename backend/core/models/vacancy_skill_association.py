@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 
 class VacancySkillAssociation(Base):
-    __tablename__ = "vacancy_skill_association"
+    __tablename__ = "vacancy_skill_associations"
     __table_args__ = (
         UniqueConstraint("vacancy_id", "skill_id", name="idx_unique_vacancy_skill"),
     )

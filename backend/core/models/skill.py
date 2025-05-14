@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from .candidate_profile_skill_association import CandidateProfileSkillAssociation
     from .vacancy_skill_association import VacancySkillAssociation
     from .skill_test import SkillTest
+    from .vacancy_response_tests import VacancyResponseTest
 
 
 class Skill(Base):
@@ -30,7 +31,13 @@ class Skill(Base):
         passive_deletes=True,
     )
 
-    tests: Mapped[list["SkillTest"]] = relationship(  # если есть тесты
+    tests: Mapped[list["SkillTest"]] = relationship(
+        back_populates="skill",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+
+    response_tests: Mapped[list["VacancyResponseTest"]] = relationship(
         back_populates="skill",
         cascade="all, delete-orphan",
         passive_deletes=True,

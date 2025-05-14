@@ -12,6 +12,8 @@ __all__ = (
     "CandidateProfile",
     "CandidateProfileSkillAssociation",
     "SkillTest",
+    "VacancyResponseStatus",
+    "VacancyResponseTest",
 )
 
 
@@ -23,5 +25,6 @@ from .candidate_profile_skill_association import CandidateProfileSkillAssociatio
 from .db_helper import db_helper
 from .vacancy import Vacancy
 from .vacancy_skill_association import VacancySkillAssociation
-from .vacancy_response import VacancyResponse
+from .vacancy_response import VacancyResponse, VacancyResponseStatus
 from .skill_test import SkillTest
+from .vacancy_response_tests import VacancyResponseTest

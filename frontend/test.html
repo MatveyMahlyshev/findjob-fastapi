@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Тест по навыку</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+</head>
+<body class="bg-gray-100 text-gray-900">
+  <header class="bg-white shadow mb-6">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+      <h1 class="text-2xl font-bold">Тест по навыку</h1>
+      <a href="vacancy_tests.html" class="text-blue-600 hover:underline">← Назад к тестам</a>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-4 py-8 bg-white shadow rounded-lg">
+    <div id="test-container">
+      <p>Загрузка вопросов...</p>
+    </div>
+    <button id="submit-test" 
+      class="mt-6 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:opacity-50" 
+      disabled>
+      Отправить тест
+    </button>
+  </main>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const skillId = params.get("skill_id");
+    const responseId = params.get("response_id");
+
+    const token = localStorage.getItem("access_token");
+    const testContainer = document.getElementById("test-container");
+    const submitBtn = document.getElementById("submit-test");
+
+    let questions = [];
+
+    if (!token) {
+      testContainer.innerHTML = "<p class='text-red-600'>Необходимо авторизоваться.</p>";
+      submitBtn.disabled = true;
+    } else if (!skillId || !responseId) {
+      testContainer.innerHTML = "<p class='text-red-600'>Отсутствуют параметры skill_id или response_id.</p>";
+      submitBtn.disabled = true;
+    } else {
+      fetchQuestions();
+    }
+
+    async function fetchQuestions() {
+      try {
+        const response = await fetch(`http://127.0.0.1:8000/api/v1/skill_test/test/${skillId}/${responseId}/`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (!response.ok) throw new Error("Ошибка загрузки теста");
+
+        questions = await response.json();
+
+        if (!questions.length) {
+          testContainer.innerHTML = "<p>Вопросы не найдены.</p>";
+          submitBtn.disabled = true;
+          return;
+        }
+
+        renderQuestions();
+        submitBtn.disabled = false;
+      } catch (err) {
+        testContainer.innerHTML = `<p class="text-red-600">Ошибка: ${err.message}</p>`;
+        submitBtn.disabled = true;
+      }
+    }
+
+    function renderQuestions() {
+      testContainer.innerHTML = "";
+      questions.forEach((q, index) => {
+        const qDiv = document.createElement("div");
+        qDiv.className = "mb-6";
+
+        const questionText = document.createElement("p");
+        questionText.className = "font-semibold mb-2";
+        questionText.textContent = `${index + 1}. ${q.question}`;
+
+        qDiv.appendChild(questionText);
+
+        q.options.forEach((option, i) => {
+          const label = document.createElement("label");
+          label.className = "block mb-1 cursor-pointer";
+
+          const input = document.createElement("input");
+          input.type = "radio";
+          input.name = `question-${q.id}`;
+          input.value = i;
+          input.className = "mr-2";
+
+          label.appendChild(input);
+          label.appendChild(document.createTextNode(option));
+
+          qDiv.appendChild(label);
+        });
+
+        testContainer.appendChild(qDiv);
+      });
+    }
+
+    submitBtn.addEventListener("click", async () => {
+      // Собираем ответы
+      const answers = [];
+
+      for (const q of questions) {
+        const radios = document.getElementsByName(`question-${q.id}`);
+        let selected = null;
+        for (const r of radios) {
+          if (r.checked) {
+            selected = parseInt(r.value);
+            break;
+          }
+        }
+        if (selected === null) {
+          alert("Пожалуйста, ответьте на все вопросы.");
+          return;
+        }
+        answers.push({
+          skill_id: q.skill_id,
+          info: {
+            question_id: q.id,
+            answer_id: selected
+          },
+          response_id: parseInt(responseId)
+        });
+      }
+
+      try {
+        const response = await fetch("http://127.0.0.1:8000/api/v1/skill_test/test/accept/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify(answers)
+        });
+
+        if (!response.ok) {
+          throw new Error("Ошибка отправки ответов");
+        }
+
+        alert("Ответы успешно отправлены!");
+        // Редирект после успешной отправки
+        window.location.href = "vacancy_tests.html";
+
+      } catch (err) {
+        alert("Ошибка: " + err.message);
+      }
+    });
+  </script>
+</body>
+</html>

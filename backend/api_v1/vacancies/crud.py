@@ -137,7 +137,7 @@ async def vacancy_respond(vacancy_id: int, payload: dict, session: AsyncSession)
     candidate_skills = set(i.skill.title for i in user.candidate_profile.profile_skills)
 
     intersection = vacancy_skills & candidate_skills
-    percent_match = len(intersection) / len(vacancy_skills) * 100  # от set1!
+    percent_match = len(intersection) / len(vacancy_skills) * 100  
     response = VacancyResponse(
         candidate_profile_id=user.candidate_profile.id,
         vacancy_id=vacancy_id,
@@ -145,7 +145,7 @@ async def vacancy_respond(vacancy_id: int, payload: dict, session: AsyncSession)
     )
     if percent_match < 70.0:
         session.add(response)
-        # await session.commit()
+        await session.commit()
         return {
             "detail": "К сожалению, ваши навыки не соответствуют требуемым навыкам компании. Спасибо за отклик!"
         }
@@ -161,5 +161,5 @@ async def vacancy_respond(vacancy_id: int, payload: dict, session: AsyncSession)
         )
         session.add(test)
 
-    # await session.commit()
-    return {"detail:" f"Отклик принят. Назначено тестов: {len(intersection)}."}
+    await session.commit()
+    return {"detail": f"Отклик принят. Назначено тестов: {len(intersection)}."}

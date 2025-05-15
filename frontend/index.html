@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Главная</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Универсальный скрипт обновления токена -->
+  <script>
+    async function fetchWithRefresh(url, options = {}) {
+      let token = localStorage.getItem("access_token");
+      if (!options.headers) options.headers = {};
+      options.headers["Authorization"] = `Bearer ${token}`;
+
+      let response = await fetch(url, options);
+
+      if (response.status === 401) {
+        const refreshToken = localStorage.getItem("refresh_token");
+        if (!refreshToken) {
+          alert("Сессия истекла, пожалуйста, войдите заново.");
+          window.location.href = "login.html";
+          return;
+        }
+
+        const refreshResponse = await fetch("http://127.0.0.1:8000/api/v1/auth/refresh/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refresh_token: refreshToken }),
+        });
+
+        if (!refreshResponse.ok) {
+          alert("Не удалось обновить токен. Пожалуйста, войдите заново.");
+          window.location.href = "login.html";
+          return;
+        }
+
+        const refreshData = await refreshResponse.json();
+        localStorage.setItem("access_token", refreshData.access_token);
+
+        // Повторный запрос с новым токеном
+        options.headers["Authorization"] = `Bearer ${refreshData.access_token}`;
+        response = await fetch(url, options);
+      }
+
+      return response;
+    }
+
+    // Чтобы функция была доступна глобально
+    window.fetchWithRefresh = fetchWithRefresh;
+  </script>
+</head>
+<body class="bg-gray-100 text-gray-900">
+  <!-- 🔝 Шапка -->
+  <header class="bg-white shadow mb-6">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+      <h1 class="text-2xl font-bold">Вакансии Онлайн</h1>
+      <div id="header-actions" class="space-x-2"></div>
+    </div>
+  </header>
+
+  <!-- 📄 Контент -->
+  <main class="max-w-4xl mx-auto px-4">
+    <h2 class="text-xl font-semibold mb-4">Список вакансий</h2>
+    <div id="vacancy-list" class="space-y-4"></div>
+  </main>
+
+  <script>
+    function goToLogin() {
+      window.location.href = "login.html";
+    }
+
+    function goToRegister() {
+      window.location.href = "register.html";
+    }
+
+    function goToProfile() {
+      window.location.href = "profile.html";
+    }
+
+    function logout() {
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+      window.location.reload();
+    }
+
+    async function isCandidate() {
+      const token = localStorage.getItem("access_token");
+      try {
+        const res = await fetchWithRefresh("http://127.0.0.1:8000/api/v1/profile/candidate/me/");
+        return res.ok;
+      } catch (_) {
+        return false;
+      }
+    }
+
+    async function renderHeader() {
+      const isAuth = !!localStorage.getItem("access_token");
+      const actions = document.getElementById("header-actions");
+
+      if (isAuth) {
+        if (await isCandidate()) {
+          actions.innerHTML = `
+            <button onclick="goToProfile()"
+              class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">
+              Профиль
+            </button>
+            <button onclick="logout()"
+              class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+              Выйти
+            </button>
+          `;
+        } else {
+          actions.innerHTML = `
+            <button onclick="logout()"
+              class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+              Выйти
+            </button>
+          `;
+        }
+      } else {
+        actions.innerHTML = `
+          <button onclick="goToLogin()"
+            class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+            Войти
+          </button>
+          <button onclick="goToRegister()"
+            class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+            Регистрация
+          </button>
+        `;
+      }
+    }
+
+    async function loadVacancies() {
+      const container = document.getElementById("vacancy-list");
+      container.innerHTML = "<p>Загрузка...</p>";
+
+      try {
+        const response = await fetchWithRefresh("http://127.0.0.1:8000/api/v1/vacancies/");
+
+        if (!response.ok) {
+          container.innerHTML = "<p class='text-red-500'>Вы не авторизованы</p>";
+          return;
+        }
+
+        const data = await response.json();
+        if (data.length === 0) {
+          container.innerHTML = "<p class='text-gray-500'>Нет вакансий</p>";
+          return;
+        }
+
+        container.innerHTML = "";
+        const isAuthCandidate = await isCandidate();
+
+        data.forEach(vacancy => {
+          const skills = vacancy.vacancy_skills.map(v => v.skill.title).join(", ");
+          const card = document.createElement("div");
+          card.className = "bg-white shadow rounded p-4";
+
+          card.innerHTML = `
+            <h3 class="text-lg font-bold">${vacancy.title}</h3>
+            <p class="text-gray-500">${vacancy.company}</p>
+            <p class="my-2">${vacancy.description}</p>
+            <p class="text-sm text-blue-600">Навыки: ${skills}</p>
+            <div class="mt-3 space-x-2">
+              <a href="vacancy.html?vacancy_id=${vacancy.id}" class="text-white bg-blue-600 px-3 py-1 rounded hover:bg-blue-700">Подробнее</a>
+              ${isAuthCandidate ? `<button onclick="respondToVacancy(${vacancy.id})" class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">Откликнуться</button>` : ""}
+            </div>
+          `;
+
+          container.appendChild(card);
+        });
+      } catch (err) {
+        container.innerHTML = "<p class='text-red-500'>Ошибка загрузки</p>";
+      }
+    }
+
+    async function respondToVacancy(id) {
+      try {
+        const res = await fetchWithRefresh(`http://127.0.0.1:8000/api/v1/vacancies/vacancy/${id}/respond/`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          }
+        });
+
+        if (res.ok) {
+          alert("Вы успешно откликнулись на вакансию.");
+        } else {
+          alert("Ошибка при отклике.");
+        }
+      } catch (err) {
+        alert("Ошибка сети при отклике.");
+      }
+    }
+
+    window.onload = async () => {
+      await renderHeader();
+      await loadVacancies();
+    };
+  </script>
+</body>
+</html>

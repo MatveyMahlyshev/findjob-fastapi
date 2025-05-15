@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Вакансия</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+</head>
+<body class="bg-gray-100 text-gray-900">
+
+  <div class="max-w-3xl mx-auto mt-10 bg-white p-6 rounded shadow">
+    <h2 id="title" class="text-2xl font-bold mb-2"></h2>
+    <p id="company" class="text-gray-500 mb-2"></p>
+    <p id="description" class="mb-4"></p>
+    <p id="skills" class="text-sm text-blue-600 mb-4"></p>
+
+    <button id="respond-button" onclick="" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 hidden">
+      Откликнуться
+    </button>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("vacancy_id");
+    let isCandidate = false;
+
+    async function refreshAccessToken() {
+      const refresh = localStorage.getItem("refresh_token");
+      if (!refresh) return false;
+      const res = await fetch("http://127.0.0.1:8000/api/v1/auth/refresh/", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ refresh_token: refresh })
+      });
+
+      if (!res.ok) return false;
+      const data = await res.json();
+      localStorage.setItem("access_token", data.access_token);
+      return true;
+    }
+
+    async function authFetch(url, options = {}, retry = true) {
+      const token = localStorage.getItem("access_token");
+      const res = await fetch(url, {
+        ...options,
+        headers: {
+          ...(options.headers || {}),
+          Authorization: token ? `Bearer ${token}` : ""
+        }
+      });
+
+      if (res.status === 401 && retry) {
+        const refreshed = await refreshAccessToken();
+        if (refreshed) return authFetch(url, options, false);
+      }
+
+      return res;
+    }
+
+    async function checkCandidate() {
+      const res = await authFetch("http://127.0.0.1:8000/api/v1/profile/candidate/me/");
+      isCandidate = res.ok;
+    }
+
+    async function loadVacancy() {
+      const res = await authFetch(`http://127.0.0.1:8000/api/v1/vacancies/id/${id}/`);
+      if (!res.ok) {
+        alert("Ошибка загрузки вакансии");
+        return;
+      }
+
+      const vac = await res.json();
+      document.getElementById("title").textContent = vac.title;
+      document.getElementById("company").textContent = vac.company;
+      document.getElementById("description").textContent = vac.description;
+      document.getElementById("skills").textContent = "Навыки: " + vac.vacancy_skills.map(v => v.skill.title).join(", ");
+
+      const respondBtn = document.getElementById("respond-button");
+      if (isCandidate) {
+        respondBtn.classList.remove("hidden");
+        respondBtn.onclick = () => respondToVacancy(id);
+      }
+    }
+
+    async function respondToVacancy(vacancyId) {
+      const res = await authFetch(`http://127.0.0.1:8000/api/v1/vacancies/vacancy/${vacancyId}/respond/`, {
+        method: "POST"
+      });
+
+      if (res.ok) {
+        alert("Вы успешно откликнулись!");
+      } else {
+        alert("Не удалось откликнуться");
+      }
+    }
+
+    window.onload = async () => {
+      await checkCandidate();
+      await loadVacancy();
+    };
+  </script>
+</body>
+</html>

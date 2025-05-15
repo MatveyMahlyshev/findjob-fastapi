@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Профиль пользователя</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+</head>
+<body class="bg-gray-100 text-gray-900">
+  <header class="bg-white shadow mb-6">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+      <h1 class="text-2xl font-bold">Вакансии Онлайн — Профиль</h1>
+      <div class="space-x-2">
+        <button id="go-to-skills"
+          class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 focus:outline-none">
+          Редактировать навыки
+        </button>
+        <button id="go-to-tests"
+          class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 focus:outline-none">
+          Мои тесты
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-3xl mx-auto px-4 py-8 bg-white shadow rounded-lg">
+    <h2 class="text-2xl font-semibold mb-4">Профиль пользователя</h2>
+
+    <div id="profile-info" class="space-y-2 mb-6 text-gray-800">
+      <p><strong>Email:</strong> <span id="email">-</span></p>
+      <p><strong>Имя:</strong> <span id="name">-</span></p>
+      <p><strong>Фамилия:</strong> <span id="surname">-</span></p>
+      <p><strong>Отчество:</strong> <span id="patronymic">-</span></p>
+      <p><strong>Возраст:</strong> <span id="age">-</span></p>
+      <p><strong>О себе:</strong> <span id="about_candidate">-</span></p>
+      <p><strong>Образование:</strong> <span id="education">-</span></p>
+      <p><strong>Навыки:</strong></p>
+      <ul id="skills-list" class="list-disc list-inside text-blue-700"></ul>
+    </div>
+
+    <button id="edit-profile-btn" 
+      class="bg-gray-500 text-white px-4 py-2 rounded cursor-not-allowed opacity-60" disabled>
+      Редактировать профиль (заглушка)
+    </button>
+  </main>
+
+  <script>
+    const emailEl = document.getElementById("email");
+    const nameEl = document.getElementById("name");
+    const surnameEl = document.getElementById("surname");
+    const patronymicEl = document.getElementById("patronymic");
+    const ageEl = document.getElementById("age");
+    const aboutEl = document.getElementById("about_candidate");
+    const educationEl = document.getElementById("education");
+    const skillsListEl = document.getElementById("skills-list");
+
+    document.getElementById("go-to-skills").onclick = () => {
+      window.location.href = "skills.html";
+    };
+
+    document.getElementById("go-to-tests").onclick = () => {
+      window.location.href = "vacancy_tests.html";
+    };
+
+    async function fetchProfile() {
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        alert("Пожалуйста, авторизуйтесь.");
+        return;
+      }
+
+      try {
+        const response = await fetch("http://127.0.0.1:8000/api/v1/profile/candidate/me/", {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (!response.ok) throw new Error("Ошибка при загрузке профиля");
+
+        const data = await response.json();
+
+        emailEl.textContent = data.email || "-";
+        nameEl.textContent = data.name || "-";
+        surnameEl.textContent = data.surname || "-";
+        patronymicEl.textContent = data.patronymic || "-";
+        ageEl.textContent = data.age ?? "-";
+        aboutEl.textContent = data.about_candidate || "-";
+        educationEl.textContent = data.education || "-";
+
+        skillsListEl.innerHTML = "";
+        if (data.skills?.length) {
+          data.skills.forEach(skill => {
+            const li = document.createElement("li");
+            li.textContent = skill.title;
+            skillsListEl.appendChild(li);
+          });
+        } else {
+          skillsListEl.innerHTML = "<li>Навыки не добавлены</li>";
+        }
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    fetchProfile();
+  </script>
+</body>
+</html>

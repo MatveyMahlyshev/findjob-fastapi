@@ -25,6 +25,11 @@ class User(UserBase):
 class UserCreate(UserBase):
     password: str = Field(min_length=10, max_length=25)
 
+class UserCreateHR(BaseModel):
+    email: Annotated[EmailStr, MinLen(5), MaxLen(25)]
+    role: UserRole = UserRole.HR
+    password: str = Field(min_length=10, max_length=25)
+
 
 class UserUpdate(UserCreate):
     pass

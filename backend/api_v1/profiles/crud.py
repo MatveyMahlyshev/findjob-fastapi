@@ -1,4 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from core.models import CandidateProfileSkillAssociation
 from .schemas import CandidateProfileUser, CandidateProfileUpdate
@@ -6,7 +8,7 @@ from api_v1.skills.schemas import SkillBase
 from api_v1.skills.crud import get_skill
 from api_v1.dependencies import get_user
 from .dependencies import get_statement_for_candidate_profile
-from core.models.user import UserRole
+from core.models import UserRole, VacancyResponse, VacancyResponseTest, CandidateProfile
 import exceptions
 
 
@@ -86,8 +88,6 @@ async def update_candidate_profile_skills(
         await session.delete(association)
     await session.flush()
 
-    
-
     for skill in skills:
         current_skill = await get_skill(session=session, title=skill.title)
         association = CandidateProfileSkillAssociation(
@@ -98,3 +98,27 @@ async def update_candidate_profile_skills(
     return skills
 
 
+async def get_candidate_tests(payload: dict, session: AsyncSession):
+    email = payload.get("sub")
+
+    user = await get_user(
+        session=session,
+        stmt=await get_statement_for_candidate_profile(payload=payload),
+        email=email,
+    )
+
+    stmt = (
+        select(VacancyResponseTest)
+        .join(VacancyResponse)
+        .join(CandidateProfile)
+        .where(CandidateProfile.id == user.candidate_profile.id)
+        .options(
+            selectinload(VacancyResponseTest.skill),
+            selectinload(VacancyResponseTest.response).selectinload(
+                VacancyResponse.vacancy
+            ),
+        )
+    )
+    result = await session.execute(statement=stmt)
+    tests = result.scalars().all()
+    return tests

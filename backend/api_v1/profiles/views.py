@@ -43,3 +43,11 @@ async def update_candidate_profile_skills(
     return await crud.update_candidate_profile_skills(
         skills=skills_in, payload=payload, session=session
     )
+
+
+@router.get("/candidate/me/tests/")
+async def get_candidate_tests(
+    payload: dict = Depends(get_current_token_payload),
+    session: AsyncSession = Depends(db_helper.scoped_session_dependency),
+):
+    return await crud.get_candidate_tests(payload=payload, session=session)

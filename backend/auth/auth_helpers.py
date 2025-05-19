@@ -7,6 +7,7 @@ from .utils import validate_password
 from .schemas import UserAuthSchema
 from . import dependencies
 import exceptions
+from api_v1 import dependencies as apd
 
 
 async def validate_auth_user(
@@ -67,3 +68,8 @@ async def get_current_auth_user_for_refresh(
         payload=payload, token_type=dependencies.TokenTypeFields.REFRESH_TOKEN_TYPE
     )
     return await get_user_by_token_sub(payload=payload, session=session)
+
+
+async def get_user_role(payload: dict, session: AsyncSession):
+    user: User = await get_user_by_token_sub(payload=payload, session=session)
+    return {"role": user.role}

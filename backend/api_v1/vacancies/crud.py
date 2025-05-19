@@ -31,17 +31,16 @@ async def create_vacancy(
 
     stmt = select(Skill).where(Skill.title.in_(skills_data))
     result = await session.execute(stmt)
-    skills = {skill.title: skill for skill in result.scalars().all()}
 
     vacancy = Vacancy(**vacancy_data, hr_id=user.id)
     session.add(vacancy)
     await session.flush()
 
-    associations = [
-        VacancySkillAssociation(vacancy_id=vacancy.id, skill_id=skills[title].id)
-        for title in skills_data
-    ]
-    session.add_all(associations)
+    for title in skills_data:
+        skill = await get_skill(session=session, title=title)
+        assoc = VacancySkillAssociation(vacancy_id=vacancy.id, skill_id=skill.id)
+        session.add(assoc)
+
     await session.commit()
     return {
         "title": vacancy.title,
@@ -87,14 +86,19 @@ async def get_vacancies_by_user(payload: dict, session: AsyncSession) -> list[Va
     stmt = (
         select(User)
         .options(
-            selectinload(User.vacancy)
-            .selectinload(Vacancy.vacancy_skills)
-            .selectinload(VacancySkillAssociation.skill)
+            selectinload(User.vacancy),
+            selectinload(User.vacancy, Vacancy.responses),
+            selectinload(User.vacancy, Vacancy.vacancy_skills),
+            selectinload(
+                User.vacancy, Vacancy.vacancy_skills, VacancySkillAssociation.skill
+            ),
         )
         .where(User.email == payload.get("sub"))
     )
     user = await get_user_by_sub(payload=payload, session=session, stmt=stmt)
     await check_access(user=user, role=UserRole.HR)
+    for vacancy in user.vacancy:
+        print(vacancy.responses)
     return user.vacancy
 
 
@@ -137,7 +141,7 @@ async def vacancy_respond(vacancy_id: int, payload: dict, session: AsyncSession)
     candidate_skills = set(i.skill.title for i in user.candidate_profile.profile_skills)
 
     intersection = vacancy_skills & candidate_skills
-    percent_match = len(intersection) / len(vacancy_skills) * 100  
+    percent_match = len(intersection) / len(vacancy_skills) * 100
     response = VacancyResponse(
         candidate_profile_id=user.candidate_profile.id,
         vacancy_id=vacancy_id,

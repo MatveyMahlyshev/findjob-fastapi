@@ -2,51 +2,170 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <title>Редактирование навыков</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Редактирование навыков | CareerConnect</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            primary: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+            },
+            dark: {
+              800: '#1e293b',
+              900: '#0f172a',
+            }
+          },
+          boxShadow: {
+            'card': '0 4px 20px rgba(0, 0, 0, 0.08)',
+            'card-hover': '0 8px 30px rgba(0, 0, 0, 0.12)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      transition: all 0.3s ease;
+    }
+    .btn {
+      transition: all 0.2s ease;
+    }
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+    .btn:active {
+      transform: translateY(0);
+    }
+    .skill-btn {
+      transition: all 0.2s ease;
+    }
+    .skill-btn:hover {
+      transform: translateY(-2px);
+    }
+    .selected-skill {
+      transition: all 0.2s ease;
+    }
+    .selected-skill:hover {
+      transform: scale(1.05);
+    }
+  </style>
 </head>
-<body class="bg-gray-100 text-gray-900">
-  <header class="bg-white shadow mb-6">
-    <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-      <h1 class="text-2xl font-bold">Вакансии Онлайн — Навыки</h1>
-      <button id="go-to-profile"
-        class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 focus:outline-none">
-        Назад в профиль
+<body class="bg-gray-50 text-gray-800 font-sans antialiased">
+  <header class="bg-white shadow-sm sticky top-0 z-10">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+      <div class="flex items-center space-x-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        </svg>
+        <h1 class="text-2xl font-bold bg-gradient-to-r from-primary-600 to-blue-400 bg-clip-text text-transparent">CareerConnect</h1>
+      </div>
+      <button id="go-to-profile" class="btn bg-gray-100 text-gray-800 px-5 py-2 rounded-lg hover:bg-gray-200 font-medium flex items-center space-x-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+        </svg>
+        <span>Назад в профиль</span>
       </button>
     </div>
   </header>
 
-  <main class="max-w-3xl mx-auto px-4 py-8">
-    <h2 class="text-2xl font-semibold mb-6 text-center">Выберите навыки</h2>
+  <main class="max-w-4xl mx-auto px-6 py-8">
+    <div class="bg-white rounded-xl shadow-card p-8 mb-8">
+      <div class="text-center mb-8">
+        <h2 class="text-3xl font-bold text-gray-900 mb-3">Ваши навыки</h2>
+        <p class="text-lg text-gray-600">Выберите навыки, которые соответствуют вашему опыту</p>
+      </div>
 
-    <div id="skills-list" class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
-      <!-- Здесь будут все навыки из API -->
+      <div class="mb-8">
+        <h3 class="text-xl font-semibold mb-4 text-gray-800">Доступные навыки</h3>
+        <div id="skills-list" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          <!-- Навыки будут загружены здесь -->
+          <div class="animate-pulse bg-gray-100 rounded-lg h-12"></div>
+          <div class="animate-pulse bg-gray-100 rounded-lg h-12"></div>
+          <div class="animate-pulse bg-gray-100 rounded-lg h-12"></div>
+          <div class="animate-pulse bg-gray-100 rounded-lg h-12"></div>
+        </div>
+      </div>
+
+      <div class="mb-8">
+        <h3 class="text-xl font-semibold mb-4 text-gray-800">Выбранные навыки</h3>
+        <div id="selected-skills" class="flex flex-wrap gap-3 min-h-16">
+          <!-- Выбранные навыки будут отображаться здесь -->
+          <div class="animate-pulse bg-gray-100 rounded-lg w-24 h-8"></div>
+          <div class="animate-pulse bg-gray-100 rounded-lg w-24 h-8"></div>
+        </div>
+        <p id="no-skills-message" class="text-gray-500 italic hidden">Вы пока не выбрали ни одного навыка</p>
+      </div>
+
+      <div class="flex flex-col space-y-4">
+        <button id="save-skills-btn" class="btn bg-primary-600 text-white py-3 rounded-lg hover:bg-primary-700 font-medium shadow-md transform hover:-translate-y-0.5 transition-all">
+          Сохранить навыки
+        </button>
+        <div id="message" class="text-center hidden"></div>
+      </div>
     </div>
-
-    <h3 class="text-xl font-semibold mb-2">Выбранные навыки:</h3>
-    <div id="selected-skills" class="flex flex-wrap gap-2 mb-6">
-      <!-- Здесь выбранные навыки -->
-    </div>
-
-    <button id="save-skills-btn" 
-      class="w-full py-3 bg-green-600 text-white rounded hover:bg-green-700 focus:outline-none">
-      Сохранить навыки
-    </button>
-
-    <div id="message" class="mt-4 text-center text-red-600 hidden"></div>
   </main>
+
+  <footer class="bg-dark-800 text-white py-12 mt-16">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div>
+          <h3 class="text-xl font-bold mb-4">CareerConnect</h3>
+          <p class="text-gray-400">Лучшая платформа для поиска работы и сотрудников.</p>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-4">Для соискателей</h4>
+          <ul class="space-y-2">
+            <li><a href="#" class="text-gray-400 hover:text-white transition">Поиск вакансий</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition">Создать резюме</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-4">Для работодателей</h4>
+          <ul class="space-y-2">
+            <li><a href="#" class="text-gray-400 hover:text-white transition">Разместить вакансию</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition">Поиск кандидатов</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-4">Контакты</h4>
+          <ul class="space-y-2">
+            <li class="text-gray-400">info@careerconnect.ru</li>
+            <li class="text-gray-400">+7 (123) 456-78-90</li>
+          </ul>
+        </div>
+      </div>
+      <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+        <p>© 2023 CareerConnect. Все права защищены.</p>
+      </div>
+    </div>
+  </footer>
 
   <script>
     const skillsListEl = document.getElementById("skills-list");
     const selectedSkillsEl = document.getElementById("selected-skills");
     const saveSkillsBtn = document.getElementById("save-skills-btn");
     const messageEl = document.getElementById("message");
+    const noSkillsMessage = document.getElementById("no-skills-message");
+    const goToProfileBtn = document.getElementById("go-to-profile");
 
     let allSkills = [];
     const selectedSkills = new Map();
 
-    document.getElementById("go-to-profile").addEventListener("click", () => {
+    goToProfileBtn.addEventListener("click", () => {
       window.location.href = "profile.html";
     });
 
@@ -58,21 +177,80 @@
 
         allSkills = await response.json();
         renderSkills();
+        
+        // Загружаем уже выбранные навыки пользователя
+        await fetchUserSkills();
       } catch (err) {
         showMessage(err.message, true);
+        skillsListEl.innerHTML = `
+          <div class="col-span-4 text-center py-8">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h3 class="text-lg font-semibold mt-4">Ошибка загрузки навыков</h3>
+            <button onclick="fetchSkills()" class="mt-4 btn bg-gray-100 text-gray-800 px-6 py-2 rounded-lg hover:bg-gray-200 font-medium">
+              Попробовать снова
+            </button>
+          </div>
+        `;
+      }
+    }
+
+    // Получаем уже выбранные навыки пользователя
+    async function fetchUserSkills() {
+      const token = localStorage.getItem("access_token");
+      if (!token) return;
+
+      try {
+        const response = await fetch("http://127.0.0.1:8000/api/v1/profile/candidate/me/skills/", {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const userSkills = await response.json();
+          userSkills.forEach(skill => {
+            const fullSkill = allSkills.find(s => s.title === skill.title);
+            if (fullSkill) {
+              selectedSkills.set(skill.title, fullSkill);
+            }
+          });
+          renderSelectedSkills();
+        }
+      } catch (err) {
+        console.error("Ошибка при загрузке навыков пользователя:", err);
       }
     }
 
     // Отобразить список всех навыков как кнопки
     function renderSkills() {
       skillsListEl.innerHTML = "";
+      
+      const badgeColors = [
+        'bg-blue-100 text-blue-800 hover:bg-blue-200',
+        'bg-green-100 text-green-800 hover:bg-green-200',
+        'bg-purple-100 text-purple-800 hover:bg-purple-200',
+        'bg-yellow-100 text-yellow-800 hover:bg-yellow-200',
+        'bg-pink-100 text-pink-800 hover:bg-pink-200',
+        'bg-indigo-100 text-indigo-800 hover:bg-indigo-200'
+      ];
+
       allSkills.forEach(skill => {
+        const isSelected = selectedSkills.has(skill.title);
+        const colorIndex = Math.floor(Math.random() * badgeColors.length);
         const btn = document.createElement("button");
+        
         btn.textContent = skill.title;
-        btn.className = "px-3 py-1 border rounded bg-gray-200 hover:bg-gray-300 focus:outline-none";
+        btn.className = `skill-btn px-4 py-2 rounded-lg font-medium text-sm ${
+          isSelected ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : badgeColors[colorIndex]
+        }`;
+        btn.disabled = isSelected;
 
         btn.addEventListener("click", () => {
           addSkill(skill);
+          btn.disabled = true;
+          btn.className = 'px-4 py-2 rounded-lg font-medium text-sm bg-gray-300 text-gray-600 cursor-not-allowed';
         });
 
         skillsListEl.appendChild(btn);
@@ -82,12 +260,45 @@
     // Добавить навык в выбранные (если еще нет)
     function addSkill(skill) {
       if (selectedSkills.has(skill.title)) return;
+      
       selectedSkills.set(skill.title, skill);
       renderSelectedSkills();
+      
+      // Анимация добавления
+      const lastSkill = selectedSkillsEl.lastChild;
+      if (lastSkill) {
+        lastSkill.classList.add('animate__animated', 'animate__bounceIn');
+        setTimeout(() => {
+          lastSkill.classList.remove('animate__animated', 'animate__bounceIn');
+        }, 1000);
+      }
     }
 
     // Удалить навык из выбранных
     function removeSkill(title) {
+      if (!selectedSkills.has(title)) return;
+      
+      // Находим кнопку этого навыка и делаем её снова активной
+      const skillButtons = skillsListEl.querySelectorAll('button');
+      skillButtons.forEach(btn => {
+        if (btn.textContent === title) {
+          const colorIndex = Math.floor(Math.random() * [
+            'bg-blue-100 text-blue-800 hover:bg-blue-200',
+            'bg-green-100 text-green-800 hover:bg-green-200',
+            'bg-purple-100 text-purple-800 hover:bg-purple-200',
+            'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
+          ].length);
+          
+          btn.disabled = false;
+          btn.className = `skill-btn px-4 py-2 rounded-lg font-medium text-sm ${
+            ['bg-blue-100 text-blue-800 hover:bg-blue-200',
+             'bg-green-100 text-green-800 hover:bg-green-200',
+             'bg-purple-100 text-purple-800 hover:bg-purple-200',
+             'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'][colorIndex]
+          }`;
+        }
+      });
+      
       selectedSkills.delete(title);
       renderSelectedSkills();
     }
@@ -95,17 +306,29 @@
     // Отобразить выбранные навыки с крестиком для удаления
     function renderSelectedSkills() {
       selectedSkillsEl.innerHTML = "";
+      
+      if (selectedSkills.size === 0) {
+        noSkillsMessage.classList.remove('hidden');
+        return;
+      }
+      
+      noSkillsMessage.classList.add('hidden');
+      
       selectedSkills.forEach(skill => {
         const skillEl = document.createElement("div");
-        skillEl.className = "flex items-center bg-blue-500 text-white rounded px-3 py-1";
+        skillEl.className = "selected-skill flex items-center bg-primary-600 text-white rounded-full px-4 py-1";
 
         const text = document.createElement("span");
         text.textContent = skill.title;
+        text.className = "text-sm font-medium";
 
         const removeBtn = document.createElement("button");
-        removeBtn.textContent = "×";
-        removeBtn.className = "ml-2 font-bold focus:outline-none";
-        removeBtn.addEventListener("click", () => removeSkill(skill.title));
+        removeBtn.innerHTML = "&times;";
+        removeBtn.className = "ml-2 text-lg font-bold focus:outline-none hover:text-primary-200";
+        removeBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          removeSkill(skill.title);
+        });
 
         skillEl.appendChild(text);
         skillEl.appendChild(removeBtn);
@@ -116,9 +339,18 @@
     // Показать сообщение об ошибке/успехе
     function showMessage(text, isError = false) {
       messageEl.textContent = text;
-      messageEl.classList.toggle("text-red-600", isError);
-      messageEl.classList.toggle("text-green-600", !isError);
+      messageEl.className = isError 
+        ? "text-red-600 font-medium animate__animated animate__fadeIn" 
+        : "text-green-600 font-medium animate__animated animate__fadeIn";
       messageEl.classList.remove("hidden");
+      
+      setTimeout(() => {
+        messageEl.classList.add("animate__fadeOut");
+        setTimeout(() => {
+          messageEl.classList.add("hidden");
+          messageEl.classList.remove("animate__fadeOut", "animate__fadeIn");
+        }, 500);
+      }, 3000);
     }
 
     // Отправка PUT-запроса для сохранения выбранных навыков
@@ -127,18 +359,30 @@
 
       const accessToken = localStorage.getItem("access_token");
       if (!accessToken) {
-        showMessage("Пожалуйста, авторизуйтесь.", true);
+        showMessage("Пожалуйста, авторизуйтесь", true);
+        setTimeout(() => {
+          window.location.href = "login.html";
+        }, 1500);
         return;
       }
 
       if (selectedSkills.size === 0) {
-        showMessage("Выберите хотя бы один навык.", true);
+        showMessage("Выберите хотя бы один навык", true);
         return;
       }
 
       const payload = Array.from(selectedSkills.values()).map(s => ({ title: s.title }));
 
       try {
+        saveSkillsBtn.disabled = true;
+        saveSkillsBtn.innerHTML = `
+          <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          Сохранение...
+        `;
+
         const response = await fetch("http://127.0.0.1:8000/api/v1/profile/candidate/me/edit/skills/", {
           method: "PUT",
           headers: {
@@ -156,12 +400,16 @@
         showMessage("Навыки успешно сохранены!", false);
       } catch (err) {
         showMessage(err.message, true);
+      } finally {
+        saveSkillsBtn.disabled = false;
+        saveSkillsBtn.textContent = "Сохранить навыки";
       }
     }
 
     saveSkillsBtn.addEventListener("click", saveSkills);
 
-    fetchSkills();
+    // Инициализация
+    document.addEventListener('DOMContentLoaded', fetchSkills);
   </script>
 </body>
 </html>

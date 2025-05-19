@@ -2,24 +2,54 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <title>Главная</title>
+  <title>Вакансии Онлайн | Главная</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
 
-  <!-- Универсальный скрипт обновления токена -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            primary: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+            },
+            dark: {
+              800: '#1e293b',
+              900: '#0f172a',
+            }
+          },
+          boxShadow: {
+            'card': '0 4px 20px rgba(0, 0, 0, 0.08)',
+            'card-hover': '0 8px 30px rgba(0, 0, 0, 0.12)',
+          }
+        }
+      }
+    }
+  </script>
+
   <script>
     async function fetchWithRefresh(url, options = {}) {
       let token = localStorage.getItem("access_token");
       if (!options.headers) options.headers = {};
-      options.headers["Authorization"] = `Bearer ${token}`;
+      if (token) {
+        options.headers["Authorization"] = `Bearer ${token}`;
+      }
 
       let response = await fetch(url, options);
 
-      if (response.status === 401) {
+      if (response.status === 401 && token) {
         const refreshToken = localStorage.getItem("refresh_token");
         if (!refreshToken) {
-          alert("Сессия истекла, пожалуйста, войдите заново.");
-          window.location.href = "login.html";
-          return;
+          return response; // Не перенаправляем на логин, просто возвращаем ответ
         }
 
         const refreshResponse = await fetch("http://127.0.0.1:8000/api/v1/auth/refresh/", {
@@ -29,15 +59,12 @@
         });
 
         if (!refreshResponse.ok) {
-          alert("Не удалось обновить токен. Пожалуйста, войдите заново.");
-          window.location.href = "login.html";
-          return;
+          return response; // Не перенаправляем на логин, просто возвращаем ответ
         }
 
         const refreshData = await refreshResponse.json();
         localStorage.setItem("access_token", refreshData.access_token);
 
-        // Повторный запрос с новым токеном
         options.headers["Authorization"] = `Bearer ${refreshData.access_token}`;
         response = await fetch(url, options);
       }
@@ -45,24 +72,99 @@
       return response;
     }
 
-    // Чтобы функция была доступна глобально
     window.fetchWithRefresh = fetchWithRefresh;
   </script>
+
+  <style>
+    body {
+      transition: all 0.3s ease;
+    }
+    .vacancy-card {
+      transition: all 0.3s ease;
+    }
+    .vacancy-card:hover {
+      transform: translateY(-4px);
+    }
+    .btn {
+      transition: all 0.2s ease;
+    }
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+    .btn:active {
+      transform: translateY(0);
+    }
+    .pulse {
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+      70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+    }
+  </style>
 </head>
-<body class="bg-gray-100 text-gray-900">
-  <!-- 🔝 Шапка -->
-  <header class="bg-white shadow mb-6">
-    <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-      <h1 class="text-2xl font-bold">Вакансии Онлайн</h1>
-      <div id="header-actions" class="space-x-2"></div>
+<body class="bg-gray-50 text-gray-800 font-sans antialiased">
+  <header class="bg-white shadow-sm sticky top-0 z-10">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+      <div class="flex items-center space-x-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        </svg>
+        <h1 class="text-2xl font-bold bg-gradient-to-r from-primary-600 to-blue-400 bg-clip-text text-transparent">CareerConnect</h1>
+      </div>
+      <div id="header-actions" class="flex items-center space-x-3"></div>
     </div>
   </header>
 
-  <!-- 📄 Контент -->
-  <main class="max-w-4xl mx-auto px-4">
-    <h2 class="text-xl font-semibold mb-4">Список вакансий</h2>
-    <div id="vacancy-list" class="space-y-4"></div>
+  <main class="max-w-7xl mx-auto px-6 py-8">
+    <div class="mb-10 text-center">
+      <h2 class="text-3xl font-bold text-gray-900 mb-3">Найдите работу своей мечты</h2>
+      <p class="text-lg text-gray-600 max-w-2xl mx-auto">Тысячи компаний ищут талантливых специалистов. Присоединяйтесь!</p>
+    </div>
+
+    <div id="vacancy-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Вакансии будут загружены здесь -->
+      <div class="animate-pulse bg-white rounded-xl shadow-card p-6 h-64"></div>
+      <div class="animate-pulse bg-white rounded-xl shadow-card p-6 h-64"></div>
+      <div class="animate-pulse bg-white rounded-xl shadow-card p-6 h-64"></div>
+    </div>
   </main>
+
+  <footer class="bg-dark-800 text-white py-12 mt-16">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div>
+          <h3 class="text-xl font-bold mb-4">CareerConnect</h3>
+          <p class="text-gray-400">Лучшая платформа для поиска работы и сотрудников.</p>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-4">Для соискателей</h4>
+          <ul class="space-y-2">
+            <li><a href="#" class="text-gray-400 hover:text-white transition">Поиск вакансий</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition">Создать резюме</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-4">Для работодателей</h4>
+          <ul class="space-y-2">
+            <li><a href="#" class="text-gray-400 hover:text-white transition">Разместить вакансию</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition">Поиск кандидатов</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-4">Контакты</h4>
+          <ul class="space-y-2">
+            <li class="text-gray-400">info@careerconnect.ru</li>
+            <li class="text-gray-400">+7 (123) 456-78-90</li>
+          </ul>
+        </div>
+      </div>
+      <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+        <p>© 2023 CareerConnect. Все права защищены.</p>
+      </div>
+    </div>
+  </footer>
 
   <script>
     function goToLogin() {
@@ -77,105 +179,190 @@
       window.location.href = "profile.html";
     }
 
+    function goToMyVacancies() {
+      window.location.href = "my_vacancies.html";
+    }
+
     function logout() {
       localStorage.removeItem("access_token");
       localStorage.removeItem("refresh_token");
       window.location.reload();
     }
 
-    async function isCandidate() {
-      const token = localStorage.getItem("access_token");
+    async function getUserRole() {
       try {
-        const res = await fetchWithRefresh("http://127.0.0.1:8000/api/v1/profile/candidate/me/");
-        return res.ok;
-      } catch (_) {
-        return false;
+        const token = localStorage.getItem("access_token");
+        if (!token) return null;
+        
+        const res = await fetchWithRefresh("http://127.0.0.1:8000/api/v1/auth/role/");
+        if (!res.ok) return null;
+        const data = await res.json();
+        return data.role;
+      } catch (err) {
+        return null;
       }
     }
 
     async function renderHeader() {
-      const isAuth = !!localStorage.getItem("access_token");
+      const token = localStorage.getItem("access_token");
       const actions = document.getElementById("header-actions");
 
-      if (isAuth) {
-        if (await isCandidate()) {
-          actions.innerHTML = `
-            <button onclick="goToProfile()"
-              class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">
-              Профиль
-            </button>
-            <button onclick="logout()"
-              class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
-              Выйти
-            </button>
-          `;
-        } else {
-          actions.innerHTML = `
-            <button onclick="logout()"
-              class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
-              Выйти
-            </button>
-          `;
-        }
-      } else {
+      if (!token) {
         actions.innerHTML = `
-          <button onclick="goToLogin()"
-            class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+          <button onclick="goToLogin()" class="btn bg-white text-primary-600 border border-primary-600 px-5 py-2 rounded-lg hover:bg-primary-50 font-medium">
             Войти
           </button>
-          <button onclick="goToRegister()"
-            class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+          <button onclick="goToRegister()" class="btn bg-primary-600 text-white px-5 py-2 rounded-lg hover:bg-primary-700 font-medium shadow-md">
             Регистрация
           </button>
         `;
+        return;
       }
+
+      const role = await getUserRole();
+
+      let buttons = "";
+
+      if (role === "hr") {
+        buttons += `
+          <button onclick="goToMyVacancies()" class="btn bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 font-medium flex items-center space-x-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+            </svg>
+            <span>Мои вакансии</span>
+          </button>
+        `;
+      } else if (role === "candidate") {
+        buttons += `
+          <button onclick="goToProfile()" class="btn bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 font-medium flex items-center space-x-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+            </svg>
+            <span>Профиль</span>
+          </button>
+        `;
+      }
+
+      buttons += `
+        <button onclick="logout()" class="btn bg-gray-100 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-200 font-medium flex items-center space-x-1">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd" />
+          </svg>
+          <span>Выйти</span>
+        </button>
+      `;
+
+      actions.innerHTML = buttons;
     }
 
     async function loadVacancies() {
       const container = document.getElementById("vacancy-list");
-      container.innerHTML = "<p>Загрузка...</p>";
-
+      
       try {
-        const response = await fetchWithRefresh("http://127.0.0.1:8000/api/v1/vacancies/");
+        const response = await fetch("http://127.0.0.1:8000/api/v1/vacancies/");
 
         if (!response.ok) {
-          container.innerHTML = "<p class='text-red-500'>Вы не авторизованы</p>";
+          container.innerHTML = `
+            <div class="col-span-3 text-center py-10">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <h3 class="text-xl font-semibold mt-4">Ошибка загрузки вакансий</h3>
+              <p class="text-gray-600 mt-2">Попробуйте обновить страницу</p>
+              <button onclick="window.location.reload()" class="mt-4 btn bg-gray-100 text-gray-800 px-6 py-2 rounded-lg hover:bg-gray-200 font-medium">
+                Обновить
+              </button>
+            </div>
+          `;
           return;
         }
 
         const data = await response.json();
         if (data.length === 0) {
-          container.innerHTML = "<p class='text-gray-500'>Нет вакансий</p>";
+          container.innerHTML = `
+            <div class="col-span-3 text-center py-16">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <h3 class="text-xl font-semibold mt-4">Нет доступных вакансий</h3>
+              <p class="text-gray-600 mt-2">Попробуйте зайти позже</p>
+            </div>
+          `;
           return;
         }
 
         container.innerHTML = "";
-        const isAuthCandidate = await isCandidate();
+
+        const role = await getUserRole();
+        const isCandidate = role === "candidate";
 
         data.forEach(vacancy => {
           const skills = vacancy.vacancy_skills.map(v => v.skill.title).join(", ");
           const card = document.createElement("div");
-          card.className = "bg-white shadow rounded p-4";
+          card.className = "vacancy-card bg-white rounded-xl shadow-card p-6 hover:shadow-card-hover border border-gray-100";
+          
+          const badgeColors = ['bg-blue-100 text-blue-800', 'bg-green-100 text-green-800', 
+                             'bg-purple-100 text-purple-800', 'bg-yellow-100 text-yellow-800'];
+          const randomColor = badgeColors[Math.floor(Math.random() * badgeColors.length)];
 
           card.innerHTML = `
-            <h3 class="text-lg font-bold">${vacancy.title}</h3>
-            <p class="text-gray-500">${vacancy.company}</p>
-            <p class="my-2">${vacancy.description}</p>
-            <p class="text-sm text-blue-600">Навыки: ${skills}</p>
-            <div class="mt-3 space-x-2">
-              <a href="vacancy.html?vacancy_id=${vacancy.id}" class="text-white bg-blue-600 px-3 py-1 rounded hover:bg-blue-700">Подробнее</a>
-              ${isAuthCandidate ? `<button onclick="respondToVacancy(${vacancy.id})" class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">Откликнуться</button>` : ""}
+            <div class="flex justify-between items-start mb-3">
+              <span class="text-xs font-medium px-2 py-1 rounded-full ${randomColor}">
+                ${vacancy.company}
+              </span>
+              <span class="text-xs text-gray-500">${new Date(vacancy.created_at).toLocaleDateString()}</span>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">${vacancy.title}</h3>
+            <p class="text-gray-600 line-clamp-3 mb-4">${vacancy.description}</p>
+            <div class="mb-5">
+              <p class="text-xs font-semibold text-gray-500 mb-1">Требуемые навыки:</p>
+              <div class="flex flex-wrap gap-2">
+                ${vacancy.vacancy_skills.map(v => `
+                  <span class="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded">${v.skill.title}</span>
+                `).join('')}
+              </div>
+            </div>
+            <div class="flex justify-between items-center pt-3 border-t border-gray-100">
+              <span class="text-sm font-medium text-primary-600">${vacancy.salary || 'Зарплата не указана'}</span>
+              <div class="space-x-2">
+                <a href="vacancy.html?vacancy_id=${vacancy.id}" class="btn bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 text-sm font-medium">
+                  Подробнее
+                </a>
+                ${isCandidate ? `
+                <button onclick="respondToVacancy(${vacancy.id})" class="btn bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm font-medium">
+                  Откликнуться
+                </button>
+                ` : ""}
+              </div>
             </div>
           `;
 
           container.appendChild(card);
         });
       } catch (err) {
-        container.innerHTML = "<p class='text-red-500'>Ошибка загрузки</p>";
+        container.innerHTML = `
+          <div class="col-span-3 text-center py-10">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h3 class="text-xl font-semibold mt-4">Ошибка загрузки</h3>
+            <p class="text-gray-600 mt-2">Попробуйте обновить страницу или зайти позже</p>
+            <button onclick="window.location.reload()" class="mt-4 btn bg-gray-100 text-gray-800 px-6 py-2 rounded-lg hover:bg-gray-200 font-medium">
+              Обновить
+            </button>
+          </div>
+        `;
       }
     }
 
     async function respondToVacancy(id) {
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        alert("Для отклика на вакансию необходимо войти в систему");
+        window.location.href = "login.html";
+        return;
+      }
+
       try {
         const res = await fetchWithRefresh(`http://127.0.0.1:8000/api/v1/vacancies/vacancy/${id}/respond/`, {
           method: "POST",
@@ -185,12 +372,44 @@
         });
 
         if (res.ok) {
-          alert("Вы успешно откликнулись на вакансию.");
+          const notification = document.createElement("div");
+          notification.className = "fixed bottom-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg animate__animated animate__fadeInUp";
+          notification.innerHTML = `
+            <div class="flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span>Вы успешно откликнулись на вакансию!</span>
+            </div>
+          `;
+          document.body.appendChild(notification);
+          
+          setTimeout(() => {
+            notification.classList.remove("animate__fadeInUp");
+            notification.classList.add("animate__fadeOutDown");
+            setTimeout(() => notification.remove(), 1000);
+          }, 3000);
         } else {
-          alert("Ошибка при отклике.");
+          throw new Error();
         }
       } catch (err) {
-        alert("Ошибка сети при отклике.");
+        const notification = document.createElement("div");
+        notification.className = "fixed bottom-4 right-4 bg-red-600 text-white px-6 py-3 rounded-lg shadow-lg animate__animated animate__fadeInUp";
+        notification.innerHTML = `
+          <div class="flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            <span>Ошибка при отклике на вакансию</span>
+          </div>
+        `;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+          notification.classList.remove("animate__fadeInUp");
+          notification.classList.add("animate__fadeOutDown");
+          setTimeout(() => notification.remove(), 1000);
+        }, 3000);
       }
     }
 

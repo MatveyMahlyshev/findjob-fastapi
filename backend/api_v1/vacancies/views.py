@@ -7,6 +7,7 @@ from core.models import db_helper
 
 from .schemas import Vacancy, VacancyBase, VacancyCreate, VacancyB
 from api_v1.vacancies import crud
+
 router = APIRouter(tags=["Vacancy"])
 
 router_with_auth = APIRouter(dependencies=[Depends(http_bearer)])
@@ -59,7 +60,7 @@ async def update_vacancy(
     )
 
 
-@router_with_auth.delete("/delete/{vacancy_id}")
+@router_with_auth.delete("/vacancy/delete/{vacancy_id}/")
 async def delete_vacancy(
     vacancy_id: int,
     payload: dict = Depends(get_current_token_payload),
@@ -68,6 +69,7 @@ async def delete_vacancy(
     return await crud.delete_vacancy(
         vacancy_id=vacancy_id, payload=payload, session=session
     )
+
 
 @router_with_auth.post("/vacancy/{vacancy_id}/respond/")
 async def vacancy_respond(
@@ -78,6 +80,9 @@ async def vacancy_respond(
     return await crud.vacancy_respond(
         vacancy_id=vacancy_id, payload=payload, session=session
     )
+
+
+
 
 
 router.include_router(router=router_without_auth)

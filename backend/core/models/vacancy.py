@@ -32,4 +32,8 @@ class Vacancy(Base):
         back_populates="vacancy",
     )
 
-    responses: Mapped[list["VacancyResponse"]] = relationship(back_populates="vacancy")
+    responses: Mapped[list["VacancyResponse"]] = relationship(
+        back_populates="vacancy",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )

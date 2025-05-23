@@ -149,7 +149,7 @@ async def update_vacancy(
 async def delete_vacancy(vacancy_id: int, payload: dict, session: AsyncSession):
     user = await get_user_by_sub(payload=payload, session=session)
     check_access(user=user, role=UserRole.HR)
-    vacancy = await get_vacancy_by_id(vacancy_id=vacancy_id, session=session)
+    vacancy = await session.get(Vacancy, vacancy_id)
     await session.delete(vacancy)
     await session.commit()
     return None

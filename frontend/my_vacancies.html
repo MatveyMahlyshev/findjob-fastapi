@@ -355,7 +355,7 @@ data.forEach(vacancy => {
       if (!confirm("Вы уверены, что хотите удалить эту вакансию?")) return;
       
       try {
-        const res = await fetchWithRefresh(`http://127.0.0.1:8000/api/v1/vacancies/id/${vacancyId}/`, {
+        const res = await fetchWithRefresh(`http://127.0.0.1:8000/api/v1/vacancies/vacancy/delete/${vacancyId}/`, {
           method: "DELETE"
         });
         

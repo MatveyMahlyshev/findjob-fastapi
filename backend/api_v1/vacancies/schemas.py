@@ -15,6 +15,15 @@ class VacancyBase(BaseModel):
     vacancy_skills: list[VacancySkillAssociationRead]
     model_config = ConfigDict(from_attributes=True)
 
+class VacancyB(BaseModel):
+    id: int
+    title: str
+    company: str
+    description: str
+    vacancy_skills: list[VacancySkillAssociationRead]
+    responses: int
+    model_config = ConfigDict(from_attributes=True)
+
 
 class Vacancy(VacancyBase):
     model_config = ConfigDict(from_attributes=True)

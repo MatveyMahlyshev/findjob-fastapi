@@ -33,7 +33,7 @@ async def accept_test(
     answers: list[SkillTestAnswers], session: AsyncSession, payload: dict
 ):
     user = await get_user_by_sub(payload=payload, session=session)
-    await check_access(user=user, role=UserRole.CANDIDATE)
+    check_access(user=user, role=UserRole.CANDIDATE)
     correct_answers = 0
     response_id = 0
     skill_id = 0

@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, Result
 from sqlalchemy.orm import selectinload
 
-from .schemas import VacancyBase, VacancyCreate
+from .schemas import VacancyBase, VacancyCreate, VacancyB
 from core.models import (
     User,
     UserRole,
@@ -24,7 +24,7 @@ async def create_vacancy(
     session: AsyncSession, payload: dict, vacancy_in: VacancyCreate
 ):
     user = await get_user_by_sub(payload=payload, session=session)
-    await check_access(user=user, role=UserRole.HR)
+    check_access(user=user, role=UserRole.HR)
 
     vacancy_data = vacancy_in.model_dump()
     skills_data = vacancy_data.pop("vacancy_skills", [])
@@ -82,7 +82,7 @@ async def get_vacancy_by_id(vacancy_id: int, session: AsyncSession) -> Vacancy:
     return vacancy
 
 
-async def get_vacancies_by_user(payload: dict, session: AsyncSession) -> list[Vacancy]:
+async def get_vacancies_by_user(payload: dict, session: AsyncSession) -> list[VacancyB]:
     stmt = (
         select(User)
         .options(
@@ -96,10 +96,18 @@ async def get_vacancies_by_user(payload: dict, session: AsyncSession) -> list[Va
         .where(User.email == payload.get("sub"))
     )
     user = await get_user_by_sub(payload=payload, session=session, stmt=stmt)
-    await check_access(user=user, role=UserRole.HR)
-    for vacancy in user.vacancy:
-        print(vacancy.responses)
-    return user.vacancy
+    check_access(user=user, role=UserRole.HR)
+    return [
+        {
+            "id": vacancy.id,
+            "title": vacancy.title,
+            "company": vacancy.company,
+            "description": vacancy.description,
+            "vacancy_skills": vacancy.vacancy_skills,
+            "responses": len(vacancy.responses),
+        }
+        for vacancy in user.vacancy
+    ]
 
 
 async def update_vacancy(
@@ -107,7 +115,7 @@ async def update_vacancy(
 ):
 
     user = await get_user_by_sub(payload=payload, session=session)
-    await check_access(user=user, role=UserRole.HR)
+    check_access(user=user, role=UserRole.HR)
     vacancy = await get_vacancy_by_id(vacancy_id=vacancy_id, session=session)
     if vacancy.hr_id != user.id:
         raise exceptions.AccessDeniesException.ACCESS_DENIED
@@ -121,7 +129,7 @@ async def update_vacancy(
 
 async def delete_vacancy(vacancy_id: int, payload: dict, session: AsyncSession):
     user = await get_user_by_sub(payload=payload, session=session)
-    await check_access(user=user, role=UserRole.HR)
+    check_access(user=user, role=UserRole.HR)
     vacancy = await get_vacancy_by_id(vacancy_id=vacancy_id, session=session)
     await session.delete(vacancy)
     await session.commit()
@@ -132,9 +140,9 @@ async def vacancy_respond(vacancy_id: int, payload: dict, session: AsyncSession)
     user = await get_user_by_sub(
         payload=payload,
         session=session,
-        stmt=await get_statement_for_candidate_profile(payload=payload),
+        stmt=get_statement_for_candidate_profile(payload=payload),
     )
-    await check_access(user=user, role=UserRole.CANDIDATE)
+    check_access(user=user, role=UserRole.CANDIDATE)
     vacancy = await get_vacancy_by_id(vacancy_id=vacancy_id, session=session)
 
     vacancy_skills = set(i.skill.title for i in vacancy.vacancy_skills)

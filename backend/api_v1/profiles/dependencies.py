@@ -3,7 +3,7 @@ from sqlalchemy.orm import selectinload
 from core.models import User, CandidateProfile, CandidateProfileSkillAssociation
 
 
-async def get_statement_for_candidate_profile(payload: dict):
+def get_statement_for_candidate_profile(payload: dict):
     return (
         select(User)
         .options(

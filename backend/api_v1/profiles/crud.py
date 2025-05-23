@@ -82,7 +82,7 @@ async def update_candidate_profile_skills(
     user = await get_user(
         session=session,
         email=payload.get("sub"),
-        stmt=await get_statement_for_candidate_profile(payload=payload),
+        stmt=get_statement_for_candidate_profile(payload=payload),
     )
     for association in user.candidate_profile.profile_skills:
         await session.delete(association)
@@ -103,7 +103,7 @@ async def get_candidate_tests(payload: dict, session: AsyncSession):
 
     user = await get_user(
         session=session,
-        stmt=await get_statement_for_candidate_profile(payload=payload),
+        stmt=get_statement_for_candidate_profile(payload=payload),
         email=email,
     )
 

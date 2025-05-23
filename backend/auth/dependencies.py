@@ -51,6 +51,6 @@ def validate_token_type(payload: dict, token_type: str) -> bool:
     raise exceptions.UnauthorizedExceptions.ERROR_TOKEN_TYPE
 
 
-async def check_access(user: User, role: str):
+def check_access(user: User, role: str):
     if user.role != role:
         raise exceptions.AccessDeniesException.ACCESS_DENIED

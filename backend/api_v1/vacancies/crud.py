@@ -50,28 +50,40 @@ async def create_vacancy(
     }
 
 
-async def get_vacanies(session: AsyncSession) -> list[Vacancy]:
+async def get_vacanies(session: AsyncSession) -> list[VacancyB]:
     stmt = (
         select(Vacancy)
         .options(
+            selectinload(Vacancy.responses),
             selectinload(Vacancy.vacancy_skills).selectinload(
                 VacancySkillAssociation.skill
-            )
+            ),
         )
         .order_by(Vacancy.id)
     )
     result: Result = await session.execute(statement=stmt)
     vacancies = list(result.scalars().all())
-    return vacancies
+    return [
+        {
+            "id": vacancy.id,
+            "title": vacancy.title,
+            "company": vacancy.company,
+            "description": vacancy.description,
+            "vacancy_skills": vacancy.vacancy_skills,
+            "responses": len(vacancy.responses),
+        }
+        for vacancy in vacancies
+    ]
 
 
-async def get_vacancy_by_id(vacancy_id: int, session: AsyncSession) -> Vacancy:
+async def get_vacancy_by_id(vacancy_id: int, session: AsyncSession) -> VacancyB:
     stmt = (
         select(Vacancy)
         .options(
+            selectinload(Vacancy.responses),
             selectinload(Vacancy.vacancy_skills).selectinload(
                 VacancySkillAssociation.skill
-            )
+            ),
         )
         .where(Vacancy.id == vacancy_id)
     )
@@ -79,7 +91,14 @@ async def get_vacancy_by_id(vacancy_id: int, session: AsyncSession) -> Vacancy:
     vacancy: Vacancy = result.scalar_one_or_none()
     if vacancy is None:
         raise exceptions.NotFoundException.VACANCY_NOT_FOUND
-    return vacancy
+    return {
+        "id": vacancy.id,
+        "title": vacancy.title,
+        "company": vacancy.company,
+        "description": vacancy.description,
+        "vacancy_skills": vacancy.vacancy_skills,
+        "responses": len(vacancy.responses),
+    }
 
 
 async def get_vacancies_by_user(payload: dict, session: AsyncSession) -> list[VacancyB]:

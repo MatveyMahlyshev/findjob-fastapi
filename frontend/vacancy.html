@@ -109,7 +109,15 @@
           <div class="flex justify-between items-start mb-6">
             <div>
               <h2 id="title" class="text-3xl font-bold text-gray-900"></h2>
-              <p id="company" class="text-lg text-primary-600 mt-1"></p>
+              <div class="flex items-center gap-4 mt-1">
+                <p id="company" class="text-lg text-primary-600"></p>
+                <span id="responses-count" class="inline-flex items-center gap-1.5 bg-gray-100 text-gray-800 text-sm font-medium px-2.5 py-0.5 rounded-full">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  Отклики: <span id="responses-number">0</span>
+                </span>
+              </div>
             </div>
             <button id="respond-button" class="btn bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 font-medium hidden">
               Откликнуться на вакансию
@@ -203,6 +211,7 @@
     const descriptionEl = document.getElementById("description");
     const skillsEl = document.getElementById("skills");
     const respondBtn = document.getElementById("respond-button");
+    const responsesNumberEl = document.getElementById("responses-number");
 
     async function refreshAccessToken() {
       const refresh = localStorage.getItem("refresh_token");
@@ -264,6 +273,7 @@
         // Заполняем данные
         titleEl.textContent = vac.title;
         companyEl.textContent = vac.company;
+        responsesNumberEl.textContent = vac.responses || 0;
         descriptionEl.innerHTML = vac.description.replace(/\n/g, "<br>");
         
         // Очищаем и заполняем навыки
@@ -310,6 +320,10 @@
         });
 
         if (res.ok) {
+          // Обновляем счетчик откликов
+          const currentCount = parseInt(responsesNumberEl.textContent) || 0;
+          responsesNumberEl.textContent = currentCount + 1;
+          
           // Красивое уведомление
           const notification = document.createElement("div");
           notification.className = "fixed bottom-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg animate__animated animate__fadeInUp";

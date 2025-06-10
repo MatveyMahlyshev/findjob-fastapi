@@ -48,9 +48,9 @@ async def get_vacancy_by_id(
     return await crud.get_vacancy_by_id(vacancy_id=vacancy_id, session=session)
 
 
-@router_with_auth.put("/edit/{vacancy_id}/", response_model=Vacancy)
+@router_with_auth.put("/vacancy/edit/{vacancy_id}/", response_model=Vacancy)
 async def update_vacancy(
-    vacancy_in: VacancyBase,
+    vacancy_in: VacancyCreate,
     vacancy_id: int,
     payload: dict = Depends(get_current_token_payload),
     session: AsyncSession = Depends(db_helper.scoped_session_dependency),
@@ -78,6 +78,16 @@ async def vacancy_respond(
     session: AsyncSession = Depends(db_helper.scoped_session_dependency),
 ):
     return await crud.vacancy_respond(
+        vacancy_id=vacancy_id, payload=payload, session=session
+    )
+
+@router_with_auth.get("/vacancy/{vacancy_id}/responds/")
+async def get_vacancy_responds(
+    vacancy_id: int,
+    payload: dict = Depends(get_current_token_payload),
+    session: AsyncSession = Depends(db_helper.scoped_session_dependency),
+):
+    return await crud.get_candidates_by_responses(
         vacancy_id=vacancy_id, payload=payload, session=session
     )
 

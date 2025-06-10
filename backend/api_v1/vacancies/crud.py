@@ -12,12 +12,13 @@ from core.models import (
     VacancyResponse,
     VacancyResponseStatus,
     VacancyResponseTest,
+    CandidateProfile,
 )
 import exceptions
 from auth.dependencies import check_access
 from api_v1.dependencies import get_user_by_sub
 from api_v1.profiles.dependencies import get_statement_for_candidate_profile
-from api_v1.skills.crud import get_skill
+from api_v1.skills.crud import get_skill, get_skill_by_id
 
 
 async def create_vacancy(
@@ -84,6 +85,7 @@ async def get_vacancy_by_id(vacancy_id: int, session: AsyncSession) -> VacancyB:
             selectinload(Vacancy.vacancy_skills).selectinload(
                 VacancySkillAssociation.skill
             ),
+            selectinload(Vacancy.hr),
         )
         .where(Vacancy.id == vacancy_id)
     )
@@ -130,20 +132,43 @@ async def get_vacancies_by_user(payload: dict, session: AsyncSession) -> list[Va
 
 
 async def update_vacancy(
-    vacancy_in: VacancyBase, vacancy_id: int, payload: dict, session: AsyncSession
+    vacancy_in: VacancyCreate, vacancy_id: int, payload: dict, session: AsyncSession
 ):
 
     user = await get_user_by_sub(payload=payload, session=session)
     check_access(user=user, role=UserRole.HR)
-    vacancy = await get_vacancy_by_id(vacancy_id=vacancy_id, session=session)
+    stmt = (
+        select(Vacancy)
+        .options(selectinload(Vacancy.vacancy_skills))
+        .where(Vacancy.id == vacancy_id)
+    )
+    result: Result = await session.execute(statement=stmt)
+    vacancy = result.scalar_one_or_none()
+
     if vacancy.hr_id != user.id:
         raise exceptions.AccessDeniesException.ACCESS_DENIED
     vacancy.company = vacancy_in.company
     vacancy.description = vacancy_in.description
     vacancy.title = vacancy_in.title
     session.add(vacancy)
+
+    for association in vacancy.vacancy_skills:
+        await session.delete(association)
+    await session.flush()
+    vacancy_skills = []
+    for skill in vacancy_in.vacancy_skills:
+        s = await get_skill(session=session, title=skill)
+        assoc = VacancySkillAssociation(vacancy_id=vacancy.id, skill_id=s.id)
+        session.add(assoc)
+        vacancy_skills.append(s.title)
+
     await session.commit()
-    return vacancy
+    return {
+        "title": vacancy.title,
+        "company": vacancy.company,
+        "description": vacancy.description,
+        "vacancy_skills": vacancy_skills,
+    }
 
 
 async def delete_vacancy(vacancy_id: int, payload: dict, session: AsyncSession):
@@ -164,7 +189,7 @@ async def vacancy_respond(vacancy_id: int, payload: dict, session: AsyncSession)
     check_access(user=user, role=UserRole.CANDIDATE)
     vacancy = await get_vacancy_by_id(vacancy_id=vacancy_id, session=session)
 
-    vacancy_skills = set(i.skill.title for i in vacancy.vacancy_skills)
+    vacancy_skills = set(i.skill.title for i in vacancy["vacancy_skills"])
     candidate_skills = set(i.skill.title for i in user.candidate_profile.profile_skills)
 
     intersection = vacancy_skills & candidate_skills
@@ -194,3 +219,94 @@ async def vacancy_respond(vacancy_id: int, payload: dict, session: AsyncSession)
 
     await session.commit()
     return {"detail": f"Отклик принят. Назначено тестов: {len(intersection)}."}
+
+
+async def get_candidates_by_responses(
+    vacancy_id: int, payload: dict, session: AsyncSession
+):
+    stmt = (
+        select(User)
+        .join(User.candidate_profile)
+        .join(CandidateProfile.vacancy_responses)
+        .options(
+            selectinload(User.candidate_profile)
+            .selectinload(CandidateProfile.vacancy_responses)
+            .selectinload(VacancyResponse.tests),
+            selectinload(User.candidate_profile).selectinload(
+                CandidateProfile.profile_skills
+            ),
+        )
+        .where(
+            User.role == UserRole.CANDIDATE,
+            VacancyResponse.vacancy_id == vacancy_id,
+        )
+    )
+
+    result: Result = await session.execute(statement=stmt)
+    users: list[User] = result.scalars().all()
+    successful_users: list[User] = []
+    for user in users:
+        for response in user.candidate_profile.vacancy_responses:
+            if response.vacancy_id == vacancy_id:
+                for test in response.tests:
+                    if not test.is_completed:
+                        break
+                else:
+                    successful_users.append(user)
+    result = [
+        {
+            "email": user.email,
+            "name": f"{user.candidate_profile.surname} {user.candidate_profile.name} {user.candidate_profile.patronymic}",
+            "age": user.candidate_profile.age,
+            "about": user.candidate_profile.about_candidate,
+            "education": user.candidate_profile.education,
+            "skills": [
+                {
+                    "title": (
+                        await get_skill_by_id(session=session, skill_id=skill.skill_id)
+                    ).title,
+                    "score": f"{next(  
+                        (
+                            test.score
+                            for response in user.candidate_profile.vacancy_responses
+                            for test in response.tests
+                            if response.vacancy_id == vacancy_id
+                            and test.skill_id == skill.skill_id
+                            and test.response_id == response.id
+                        )
+                    )}%",
+                }
+                for skill in user.candidate_profile.profile_skills
+            ],
+        }
+        for user in successful_users
+    ]
+
+    return [
+        {
+            "email": user.email,
+            "name": f"{user.candidate_profile.surname} {user.candidate_profile.name} {user.candidate_profile.patronymic}",
+            "age": user.candidate_profile.age,
+            "about": user.candidate_profile.about_candidate,
+            "education": user.candidate_profile.education,
+            "skills": [
+                {
+                    "title": (
+                        await get_skill_by_id(session=session, skill_id=skill.skill_id)
+                    ).title,
+                    "score": f"{next(  
+                        (
+                            test.score
+                            for response in user.candidate_profile.vacancy_responses
+                            for test in response.tests
+                            if response.vacancy_id == vacancy_id
+                            and test.skill_id == skill.skill_id
+                            and test.response_id == response.id
+                        )
+                    )}%",
+                }
+                for skill in user.candidate_profile.profile_skills
+            ],
+        }
+        for user in successful_users
+    ]

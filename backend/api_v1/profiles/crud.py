@@ -19,7 +19,7 @@ async def get_user_with_profile_by_token(
 
     user = await get_user(
         session=session,
-        stmt=await get_statement_for_candidate_profile(payload=payload),
+        stmt=get_statement_for_candidate_profile(payload=payload),
         email=email,
     )
 

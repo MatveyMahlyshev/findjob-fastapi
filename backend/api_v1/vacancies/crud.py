@@ -1,6 +1,10 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, Result
 from sqlalchemy.orm import selectinload
+from openpyxl import Workbook
+from io import BytesIO
+from statistics import mean
+from fastapi import Response
 
 from .schemas import VacancyBase, VacancyCreate, VacancyB
 from core.models import (
@@ -29,9 +33,6 @@ async def create_vacancy(
 
     vacancy_data = vacancy_in.model_dump()
     skills_data = vacancy_data.pop("vacancy_skills", [])
-
-    stmt = select(Skill).where(Skill.title.in_(skills_data))
-    result = await session.execute(stmt)
 
     vacancy = Vacancy(**vacancy_data, hr_id=user.id)
     session.add(vacancy)
@@ -136,7 +137,7 @@ async def update_vacancy(
 ):
 
     user = await get_user_by_sub(payload=payload, session=session)
-    check_access(user=user, role=UserRole.HR)
+    await check_access(user=user, role=UserRole.HR)
     stmt = (
         select(Vacancy)
         .options(selectinload(Vacancy.vacancy_skills))
@@ -221,9 +222,7 @@ async def vacancy_respond(vacancy_id: int, payload: dict, session: AsyncSession)
     return {"detail": f"Отклик принят. Назначено тестов: {len(intersection)}."}
 
 
-async def get_candidates_by_responses(
-    vacancy_id: int, payload: dict, session: AsyncSession
-):
+async def get_data_for_excel(vacancy_id: int, session: AsyncSession):
     stmt = (
         select(User)
         .join(User.candidate_profile)
@@ -249,64 +248,138 @@ async def get_candidates_by_responses(
         for response in user.candidate_profile.vacancy_responses:
             if response.vacancy_id == vacancy_id:
                 for test in response.tests:
-                    if not test.is_completed:
+                    if not test.is_completed or test.score == 0.0:
                         break
                 else:
                     successful_users.append(user)
-    result = [
-        {
-            "email": user.email,
-            "name": f"{user.candidate_profile.surname} {user.candidate_profile.name} {user.candidate_profile.patronymic}",
-            "age": user.candidate_profile.age,
-            "about": user.candidate_profile.about_candidate,
-            "education": user.candidate_profile.education,
-            "skills": [
-                {
-                    "title": (
-                        await get_skill_by_id(session=session, skill_id=skill.skill_id)
-                    ).title,
-                    "score": f"{next(  
-                        (
-                            test.score
-                            for response in user.candidate_profile.vacancy_responses
-                            for test in response.tests
-                            if response.vacancy_id == vacancy_id
-                            and test.skill_id == skill.skill_id
-                            and test.response_id == response.id
-                        )
-                    )}%",
-                }
-                for skill in user.candidate_profile.profile_skills
-            ],
-        }
-        for user in successful_users
-    ]
 
-    return [
-        {
-            "email": user.email,
-            "name": f"{user.candidate_profile.surname} {user.candidate_profile.name} {user.candidate_profile.patronymic}",
-            "age": user.candidate_profile.age,
-            "about": user.candidate_profile.about_candidate,
-            "education": user.candidate_profile.education,
-            "skills": [
-                {
-                    "title": (
-                        await get_skill_by_id(session=session, skill_id=skill.skill_id)
-                    ).title,
-                    "score": f"{next(  
-                        (
-                            test.score
-                            for response in user.candidate_profile.vacancy_responses
-                            for test in response.tests
-                            if response.vacancy_id == vacancy_id
-                            and test.skill_id == skill.skill_id
-                            and test.response_id == response.id
-                        )
-                    )}%",
-                }
-                for skill in user.candidate_profile.profile_skills
-            ],
-        }
-        for user in successful_users
-    ]
+    stmt = select(Skill).options(selectinload(Skill.skill_vacancies))
+    result = await session.execute(statement=stmt)
+    vacancy_skills = [i.title for i in result.scalars().all()]
+    return {
+        "candidates": [
+            {
+                "email": user.email,
+                "name": f"{user.candidate_profile.surname} {user.candidate_profile.name} {user.candidate_profile.patronymic}",
+                "age": user.candidate_profile.age,
+                "about": user.candidate_profile.about_candidate,
+                "education": user.candidate_profile.education,
+                "skills": [
+                    {
+                        "title": (
+                            await get_skill_by_id(
+                                session=session, skill_id=skill.skill_id
+                            )
+                        ).title,
+                        "score": f"{next(  
+                            (
+                                test.score
+                                for response in user.candidate_profile.vacancy_responses
+                                for test in response.tests
+                                if response.vacancy_id == vacancy_id
+                                and test.skill_id == skill.skill_id
+                                and test.response_id == response.id
+                            ), "N/A"
+                        )}%",
+                    }
+                    for skill in user.candidate_profile.profile_skills
+                ],
+            }
+            for user in successful_users
+        ],
+        "vacancy_skills": vacancy_skills,
+    }
+
+
+async def get_candidates_by_responses(
+    vacancy_id: int,
+    session: AsyncSession,
+    payload: dict,
+):
+    user = await get_user_by_sub(
+        payload=payload,
+        session=session,
+    )
+    check_access(user=user, role=UserRole.HR)
+
+    response_data = await get_data_for_excel(vacancy_id=vacancy_id, session=session)
+
+    candidates = response_data["candidates"]
+    vacancy_skills = response_data["vacancy_skills"]  # Список строк
+
+    # Добавляем средний балл и фильтруем кандидатов
+    processed_candidates = []
+    for candidate in candidates:
+        skills_dict = {skill["title"]: skill["score"] for skill in candidate["skills"]}
+
+        # Считаем средний балл (игнорируем "N/A")
+        scores = []
+        for skill_name in vacancy_skills:
+            score = skills_dict.get(skill_name, "N/A")
+            if score != "N/A":
+                try:
+                    scores.append(float(score.strip("%")))
+                except (ValueError, AttributeError):
+                    pass
+
+        avg_score = round(mean(scores), 2) if scores else 0
+
+        processed_candidates.append(
+            {**candidate, "skills_dict": skills_dict, "avg_score": avg_score}
+        )
+
+    # Сортируем по среднему баллу (по убыванию)
+    processed_candidates.sort(key=lambda x: x["avg_score"], reverse=True)
+
+    # Создаем Excel файл
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Кандидаты"
+
+    # Формируем заголовки (добавляем столбец для среднего балла)
+    headers = (
+        ["Email", "ФИО", "Возраст", "О себе", "Образование"]
+        + vacancy_skills
+        + ["Средний балл"]
+    )
+    ws.append(headers)
+
+    # Заполняем данные
+    for candidate in processed_candidates:
+        row_data = [
+            candidate["email"],
+            candidate["name"],
+            candidate["age"],
+            candidate["about"],
+            candidate["education"],
+        ]
+
+        # Добавляем оценки навыков
+        for skill_name in vacancy_skills:
+            row_data.append(candidate["skills_dict"].get(skill_name, "N/A"))
+
+        # Добавляем средний балл
+        row_data.append(f"{candidate['avg_score']}%")
+
+        ws.append(row_data)
+
+    # Автонастройка ширины столбцов
+    for column in ws.columns:
+        column_letter = column[0].column_letter
+        max_length = max((len(str(cell.value)) for cell in column) if column else 0)
+        adjusted_width = (max_length + 2) * 1.2
+        ws.column_dimensions[column_letter].width = adjusted_width
+
+    # Подготовка файла для скачивания
+    buffer = BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+
+    return Response(
+        content=buffer.getvalue(),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={
+            "Content-Disposition": "attachment; filename=vacancy_responds.xlsx",
+            "Access-Control-Expose-Headers": "Content-Disposition",
+        },
+    )

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -81,18 +81,17 @@ async def vacancy_respond(
         vacancy_id=vacancy_id, payload=payload, session=session
     )
 
+
 @router_with_auth.get("/vacancy/{vacancy_id}/responds/")
 async def get_vacancy_responds(
     vacancy_id: int,
     payload: dict = Depends(get_current_token_payload),
     session: AsyncSession = Depends(db_helper.scoped_session_dependency),
 ):
+    # Получаем данные
     return await crud.get_candidates_by_responses(
         vacancy_id=vacancy_id, payload=payload, session=session
     )
-
-
-
 
 
 router.include_router(router=router_without_auth)

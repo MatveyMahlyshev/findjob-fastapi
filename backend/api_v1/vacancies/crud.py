@@ -253,9 +253,15 @@ async def get_data_for_excel(vacancy_id: int, session: AsyncSession):
                 else:
                     successful_users.append(user)
 
-    stmt = select(Skill).options(selectinload(Skill.skill_vacancies))
+    stmt = (
+        select(Skill)
+        .join(VacancySkillAssociation, Skill.skill_vacancies)
+        .where(VacancySkillAssociation.vacancy_id == vacancy_id)
+        .options(selectinload(Skill.skill_vacancies))
+    )
     result = await session.execute(statement=stmt)
-    vacancy_skills = [i.title for i in result.scalars().all()]
+    vac = result.scalars().all()
+    vacancy_skills = [i.title for i in vac]
     return {
         "candidates": [
             {
@@ -305,14 +311,12 @@ async def get_candidates_by_responses(
     response_data = await get_data_for_excel(vacancy_id=vacancy_id, session=session)
 
     candidates = response_data["candidates"]
-    vacancy_skills = response_data["vacancy_skills"]  # Список строк
+    vacancy_skills = response_data["vacancy_skills"]
 
-    # Добавляем средний балл и фильтруем кандидатов
     processed_candidates = []
     for candidate in candidates:
         skills_dict = {skill["title"]: skill["score"] for skill in candidate["skills"]}
 
-        # Считаем средний балл (игнорируем "N/A")
         scores = []
         for skill_name in vacancy_skills:
             score = skills_dict.get(skill_name, "N/A")
@@ -328,15 +332,12 @@ async def get_candidates_by_responses(
             {**candidate, "skills_dict": skills_dict, "avg_score": avg_score}
         )
 
-    # Сортируем по среднему баллу (по убыванию)
     processed_candidates.sort(key=lambda x: x["avg_score"], reverse=True)
 
-    # Создаем Excel файл
     wb = Workbook()
     ws = wb.active
     ws.title = "Кандидаты"
 
-    # Формируем заголовки (добавляем столбец для среднего балла)
     headers = (
         ["Email", "ФИО", "Возраст", "О себе", "Образование"]
         + vacancy_skills
@@ -344,7 +345,6 @@ async def get_candidates_by_responses(
     )
     ws.append(headers)
 
-    # Заполняем данные
     for candidate in processed_candidates:
         row_data = [
             candidate["email"],
@@ -354,23 +354,19 @@ async def get_candidates_by_responses(
             candidate["education"],
         ]
 
-        # Добавляем оценки навыков
         for skill_name in vacancy_skills:
             row_data.append(candidate["skills_dict"].get(skill_name, "N/A"))
 
-        # Добавляем средний балл
         row_data.append(f"{candidate['avg_score']}%")
 
         ws.append(row_data)
 
-    # Автонастройка ширины столбцов
     for column in ws.columns:
         column_letter = column[0].column_letter
         max_length = max((len(str(cell.value)) for cell in column) if column else 0)
         adjusted_width = (max_length + 2) * 1.2
         ws.column_dimensions[column_letter].width = adjusted_width
 
-    # Подготовка файла для скачивания
     buffer = BytesIO()
     wb.save(buffer)
     buffer.seek(0)

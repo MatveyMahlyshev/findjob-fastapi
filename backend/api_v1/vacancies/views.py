@@ -88,7 +88,6 @@ async def get_vacancy_responds(
     payload: dict = Depends(get_current_token_payload),
     session: AsyncSession = Depends(db_helper.scoped_session_dependency),
 ):
-    # Получаем данные
     return await crud.get_candidates_by_responses(
         vacancy_id=vacancy_id, payload=payload, session=session
     )

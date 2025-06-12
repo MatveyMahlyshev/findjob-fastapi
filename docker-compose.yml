@@ -11,6 +11,31 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: fastapi_backend
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/fastapi_db
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ./backend:/app
+
+  frontend:
+    image: python:3.12.3-slim
+    container_name: frontend_http_server
+    working_dir: /frontend
+    volumes:
+      - ./frontend:/frontend
+    ports:
+      - "8080:8080"
+    command: python3 -m http.server 8080
 
 volumes:
   postgres_data:

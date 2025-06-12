@@ -18,7 +18,7 @@ class AuthJWT(BaseModel):
 
 
 class DBSettings(BaseModel):
-    url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/fastapi_db"
+    url: str = "postgresql+asyncpg://postgres:postgres@db:5432/fastapi_db"
     echo: bool = False
 
 

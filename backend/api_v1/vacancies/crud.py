@@ -137,7 +137,7 @@ async def update_vacancy(
 ):
 
     user = await get_user_by_sub(payload=payload, session=session)
-    await check_access(user=user, role=UserRole.HR)
+    check_access(user=user, role=UserRole.HR)
     stmt = (
         select(Vacancy)
         .options(selectinload(Vacancy.vacancy_skills))

@@ -19,7 +19,6 @@ async def create_skill_question(
     await session.commit()
     return skill_test
 
-
 async def get_test_by_skill(skill_id: int, session: AsyncSession) -> list[SkillTest]:
     stmt = select(SkillTest).where(SkillTest.skill_id == skill_id)
     result: Result = await session.execute(statement=stmt)

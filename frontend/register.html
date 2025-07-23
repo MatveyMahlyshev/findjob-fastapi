@@ -306,8 +306,8 @@
 
     async function registerUser(data, isCandidate) {
       const url = isCandidate
-        ? "http://127.0.0.1:8000/api/v1/users/register/candidate/"
-        : "http://127.0.0.1:8000/api/v1/users/register/hr/";
+        ? "/api/v1/users/register/candidate/"
+        : "/api/v1/users/register/hr/";
 
       const response = await fetch(url, {
         method: "POST",

@@ -21,7 +21,10 @@ app.include_router(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8080"],  # или ["*"] для всех
+    allow_origins=[
+        "http://localhost:8080",
+        "http://192.168.0.7:8080",
+    ],  # или ["*"] для всех
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
